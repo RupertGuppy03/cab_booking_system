@@ -1,0 +1,20 @@
+# macOS
+.DS_Store
+
+# VS Code
+.vscode/
+
+# Logs
+*.log
+
+# Environment files
+.env
+
+# Node / React
+node_modules/
+dist/
+build/
+
+# Temporary files
+*.tmp
+*.swp
