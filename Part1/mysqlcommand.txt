@@ -1,0 +1,4 @@
+Student: Rupert Guppy | ID: 23196925
+File: mysqlcommand.txt
+Description: Contains the MySQL CREATE TABLE command used to set up the bookings table
+             for the CabsOnline taxi booking system.
