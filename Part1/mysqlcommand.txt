@@ -2,3 +2,19 @@ Student: Rupert Guppy | ID: 23196925
 File: mysqlcommand.txt
 Description: Contains the MySQL CREATE TABLE command used to set up the bookings table
              for the CabsOnline taxi booking system.
+
+CREATE TABLE bookings (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    brn VARCHAR(8) NOT NULL UNIQUE,
+    cname VARCHAR(100) NOT NULL,
+    phone VARCHAR(12) NOT NULL,
+    unumber VARCHAR(10),
+    snumber VARCHAR(10) NOT NULL,
+    stname VARCHAR(100) NOT NULL,
+    sbname VARCHAR(100),
+    dsbname VARCHAR(100),
+    pickup_date VARCHAR(10) NOT NULL,
+    pickup_time VARCHAR(5) NOT NULL,
+    booking_datetime DATETIME NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'unassigned'
+);
