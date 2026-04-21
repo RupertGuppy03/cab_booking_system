@@ -21,7 +21,7 @@
                          corresponding Assign button and displays a confirmation message.
 */
 
-
+/*testing comment*/
 /*
   validateBrn(brn)
   Checks whether the given string matches the format BRN followed by exactly 5 digits.
