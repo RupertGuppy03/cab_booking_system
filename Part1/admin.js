@@ -132,7 +132,7 @@ function renderTable(records) {
     });
 
     tableHtml += '</tbody></table>';
-    tableHtml += '<div class="assign-confirmation" id="assignConfirmation"></div>';
+    tableHtml += '<div class="assign-confirmation confirmation-box" id="assignConfirmation"></div>';
 
     contentDiv.innerHTML = tableHtml;
 }

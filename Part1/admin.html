@@ -24,42 +24,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CabsOnline – Admin Panel</title>
+
+  <!-- Shared styles across booking.html and admin.html -->
+  <link rel="stylesheet" href="style.css" />
+
   <style>
-    /* ── Reset ── */
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    /* ── Page-specific layout: admin panel ── */
 
-    /* ── Page base ── */
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f4f4f4;
-      color: #333;
-      padding: 30px 20px;
-    }
-
-    /* ── Top header bar ── */
-    header {
-      background-color: #1a1a2e;
-      color: white;
-      padding: 20px 30px;
-      border-radius: 8px;
-      margin-bottom: 30px;
-    }
-
-    header h1 {
-      font-size: 1.8rem;
-    }
-
-    header p {
-      font-size: 0.95rem;
-      color: #ccc;
-      margin-top: 4px;
-    }
-
-    /* ── White card that wraps the search bar ── */
+    /* White card wrapping the search bar */
     .search-container {
       background: white;
       padding: 24px;
@@ -71,11 +43,10 @@
 
     .search-container h2 {
       font-size: 1.1rem;
-      color: #1a1a2e;
       margin-bottom: 16px;
     }
 
-    /* ── Search input and button row ── */
+    /* Search input and button sit on one row */
     .search-row {
       display: flex;
       gap: 10px;
@@ -84,48 +55,26 @@
 
     .search-row input[type="text"] {
       flex: 1;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      font-size: 0.95rem;
     }
 
-    .search-row input[type="text"]:focus {
-      outline: none;
-      border-color: #1a1a2e;
-    }
-
-    /* ── Search button ── */
-    input[type="button"] {
+    /* Search button padding (overrides shared base) */
+    .search-row input[type="button"] {
       padding: 10px 20px;
-      background-color: #1a1a2e;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      font-size: 0.95rem;
-      cursor: pointer;
     }
 
-    input[type="button"]:hover {
-      background-color: #16213e;
-    }
-
-    /* ── Error message shown for invalid BRN format ── */
-    .error-msg {
-      color: #c0392b;
-      font-size: 0.85rem;
+    /* Error message spacing inside the search card */
+    .search-container .error-msg {
       margin-top: 8px;
-      display: none;
     }
 
-    /* ── Hint text below search bar ── */
+    /* Hint text below the search bar */
     .search-hint {
       font-size: 0.8rem;
       color: #888;
       margin-top: 8px;
     }
 
-    /* ── Results table container (required class name for marking) ── */
+    /* Results table container (class="content" required by marking scheme) */
     .content {
       background: white;
       border-radius: 8px;
@@ -134,7 +83,7 @@
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
 
-    /* ── Results table ── */
+    /* Results table */
     table {
       width: 100%;
       border-collapse: collapse;
@@ -165,7 +114,7 @@
       vertical-align: middle;
     }
 
-    /* ── Assign button inside each table row ── */
+    /* Assign button inside each row */
     .assign-btn {
       padding: 6px 14px;
       background-color: #1a1a2e;
@@ -180,25 +129,20 @@
       background-color: #16213e;
     }
 
-    /* ── Greyed out state after assignment ── */
     .assign-btn:disabled {
       background-color: #aaa;
       cursor: not-allowed;
     }
 
-    /* ── Confirmation message shown after assignment ── */
+    /* Confirmation message after assignment */
     .assign-confirmation {
       margin-top: 20px;
       padding: 14px 18px;
-      background-color: #eafaf1;
-      border: 1px solid #2ecc71;
-      border-radius: 6px;
       font-size: 0.9rem;
-      color: #1a1a2e;
       display: none;
     }
 
-    /* ── Message shown when no results found ── */
+    /* Fallback message shown when no results exist */
     .no-results {
       font-size: 0.9rem;
       color: #888;
