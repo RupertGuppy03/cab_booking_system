@@ -4,4 +4,240 @@
   Description: Customer-facing booking form for CabsOnline taxi booking system.
                Collects passenger details and pickup information, submits to booking.php via fetch.
 -->
-               
+
+<!--
+  Student: Rupert Guppy | ID: 23196925
+  File: booking.html
+  Description: Customer-facing booking form for CabsOnline taxi booking system.
+               Collects passenger details and pickup information, submits to booking.php
+               via fetch (no page reload). Displays confirmation message with BRN on success.
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CabsOnline – Book a Cab</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      color: #333;
+      padding: 30px 20px;
+    }
+
+    header {
+      background-color: #1a1a2e;
+      color: white;
+      padding: 20px 30px;
+      border-radius: 8px;
+      margin-bottom: 30px;
+    }
+
+    header h1 {
+      font-size: 1.8rem;
+    }
+
+    header p {
+      font-size: 0.95rem;
+      color: #ccc;
+      margin-top: 4px;
+    }
+
+    .form-container {
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      max-width: 600px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      font-size: 1.2rem;
+      margin-bottom: 20px;
+      color: #1a1a2e;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.9rem;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .optional {
+      font-weight: normal;
+      color: #888;
+      font-size: 0.8rem;
+    }
+
+    input[type="text"],
+    input[type="date"],
+    input[type="time"] {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 0.95rem;
+    }
+
+    input[type="text"]:focus,
+    input[type="date"]:focus,
+    input[type="time"]:focus {
+      outline: none;
+      border-color: #1a1a2e;
+    }
+
+    .row {
+      display: flex;
+      gap: 12px;
+    }
+
+    .row .form-group {
+      flex: 1;
+    }
+
+    .error-msg {
+      color: #c0392b;
+      font-size: 0.85rem;
+      margin-top: 4px;
+      display: none;
+    }
+
+    button[type="button"] {
+      width: 100%;
+      padding: 12px;
+      background-color: #1a1a2e;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 1rem;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    button[type="button"]:hover {
+      background-color: #16213e;
+    }
+
+    .confirmation {
+      margin-top: 24px;
+      background-color: #eafaf1;
+      border: 1px solid #2ecc71;
+      border-radius: 8px;
+      padding: 20px;
+      display: none;
+    }
+
+    #reference {
+      font-size: 0.95rem;
+      line-height: 1.7;
+      color: #1a1a2e;
+    }
+
+    .section-divider {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #999;
+      margin: 20px 0 10px;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>CabsOnline</h1>
+    <p>Book your cab anywhere in Auckland and surrounding areas</p>
+  </header>
+
+  <div class="form-container">
+    <h2>New Booking</h2>
+
+    <p class="section-divider">Your Details</p>
+
+    <div class="form-group">
+      <label for="cname">Customer Name</label>
+      <input type="text" id="cname" name="cname" placeholder="Full name" />
+      <span class="error-msg" id="err-cname">Please enter your name.</span>
+    </div>
+
+    <div class="form-group">
+      <label for="phone">Phone Number</label>
+      <input type="text" id="phone" name="phone" placeholder="10–12 digit number" />
+      <span class="error-msg" id="err-phone">Phone must be 10–12 digits, numbers only.</span>
+    </div>
+
+    <p class="section-divider">Pickup Address</p>
+
+    <div class="row">
+      <div class="form-group">
+        <label for="unumber">Unit Number <span class="optional">(optional)</span></label>
+        <input type="text" id="unumber" name="unumber" placeholder="e.g. 2A" />
+      </div>
+      <div class="form-group">
+        <label for="snumber">Street Number</label>
+        <input type="text" id="snumber" name="snumber" placeholder="e.g. 45" />
+        <span class="error-msg" id="err-snumber">Please enter a street number.</span>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="stname">Street Name</label>
+      <input type="text" id="stname" name="stname" placeholder="e.g. Queen Street" />
+      <span class="error-msg" id="err-stname">Please enter a street name.</span>
+    </div>
+
+    <div class="form-group">
+      <label for="sbname">Suburb <span class="optional">(optional)</span></label>
+      <input type="text" id="sbname" name="sbname" placeholder="e.g. Auckland CBD" />
+    </div>
+
+    <p class="section-divider">Destination & Pickup Time</p>
+
+    <div class="form-group">
+      <label for="dsbname">Destination Suburb <span class="optional">(optional)</span></label>
+      <input type="text" id="dsbname" name="dsbname" placeholder="e.g. Newmarket" />
+    </div>
+
+    <div class="row">
+      <div class="form-group">
+        <label for="date">Pickup Date</label>
+        <input type="text" id="date" name="date" placeholder="DD/MM/YYYY" />
+        <span class="error-msg" id="err-date">Please enter a valid date (DD/MM/YYYY).</span>
+      </div>
+      <div class="form-group">
+        <label for="time">Pickup Time</label>
+        <input type="text" id="time" name="time" placeholder="HH:MM" />
+        <span class="error-msg" id="err-time">Please enter a valid time (HH:MM).</span>
+      </div>
+    </div>
+
+    <span class="error-msg" id="err-datetime" style="display:none; margin-bottom: 8px;">
+      Pickup date and time cannot be in the past.
+    </span>
+
+    <button type="button" id="submitBtn" onclick="submitBooking()">Confirm Booking</button>
+
+    <div class="confirmation" id="confirmationBox">
+      <p id="reference"></p>
+    </div>
+
+  </div>
+
+  <script src="booking.js"></script>
+</body>
+</html>
