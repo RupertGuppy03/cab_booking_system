@@ -2,15 +2,14 @@
   Student: Rupert Guppy | ID: 23196925
   File: booking.html
   Description: Customer-facing booking form for CabsOnline taxi booking system.
-               Collects passenger details and pickup information, submits to booking.php via fetch.
--->
-
-<!--
-  Student: Rupert Guppy | ID: 23196925
-  File: booking.html
-  Description: Customer-facing booking form for CabsOnline taxi booking system.
                Collects passenger details and pickup information, submits to booking.php
                via fetch (no page reload). Displays confirmation message with BRN on success.
+
+  Functions (defined in booking.js):
+    - submitBooking(): Validates all form inputs and sends booking data to booking.php via fetch.
+                       Displays confirmation message with BRN, pickup date and time on success.
+    - setDefaults():   Sets the pickup date and time fields to the current date (DD/MM/YYYY)
+                       and current time (HH:MM) when the page loads.
 -->
 
 <!DOCTYPE html>
@@ -19,38 +18,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CabsOnline – Book a Cab</title>
+
+  <!-- Shared styles across booking.html and admin.html -->
+  <link rel="stylesheet" href="style.css" />
+
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    /* ── Page-specific layout: booking form ── */
 
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f4f4f4;
-      color: #333;
-      padding: 30px 20px;
-    }
-
-    header {
-      background-color: #1a1a2e;
-      color: white;
-      padding: 20px 30px;
-      border-radius: 8px;
-      margin-bottom: 30px;
-    }
-
-    header h1 {
-      font-size: 1.8rem;
-    }
-
-    header p {
-      font-size: 0.95rem;
-      color: #ccc;
-      margin-top: 4px;
-    }
-
+    /* White card wrapping the form */
     .form-container {
       background: white;
       padding: 30px;
@@ -59,12 +34,7 @@
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
 
-    h2 {
-      font-size: 1.2rem;
-      margin-bottom: 20px;
-      color: #1a1a2e;
-    }
-
+    /* Individual input + label wrapper */
     .form-group {
       margin-bottom: 16px;
     }
@@ -76,29 +46,19 @@
       margin-bottom: 5px;
     }
 
+    /* Label suffix for optional fields */
     .optional {
       font-weight: normal;
       color: #888;
       font-size: 0.8rem;
     }
 
-    input[type="text"],
-    input[type="date"],
-    input[type="time"] {
+    /* Form inputs stretch full width of form card */
+    .form-container input[type="text"] {
       width: 100%;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      font-size: 0.95rem;
     }
 
-    input[type="text"]:focus,
-    input[type="date"]:focus,
-    input[type="time"]:focus {
-      outline: none;
-      border-color: #1a1a2e;
-    }
-
+    /* Side-by-side inputs (e.g. unit + street number) */
     .row {
       display: flex;
       gap: 12px;
@@ -108,44 +68,33 @@
       flex: 1;
     }
 
-    .error-msg {
-      color: #c0392b;
-      font-size: 0.85rem;
+    /* Error messages inside the form sit just below their input */
+    .form-container .error-msg {
       margin-top: 4px;
-      display: none;
     }
 
-    button[type="button"] {
+    /* Submit button fills width of form card */
+    .form-container button[type="button"] {
       width: 100%;
       padding: 12px;
-      background-color: #1a1a2e;
-      color: white;
-      border: none;
-      border-radius: 5px;
       font-size: 1rem;
-      cursor: pointer;
       margin-top: 10px;
     }
 
-    button[type="button"]:hover {
-      background-color: #16213e;
-    }
-
+    /* Confirmation box shown after successful booking */
     .confirmation {
       margin-top: 24px;
-      background-color: #eafaf1;
-      border: 1px solid #2ecc71;
-      border-radius: 8px;
       padding: 20px;
       display: none;
     }
 
+    /* Confirmation message text (id="reference" required by marking scheme) */
     #reference {
       font-size: 0.95rem;
       line-height: 1.7;
-      color: #1a1a2e;
     }
 
+    /* Visual divider between form sections */
     .section-divider {
       font-size: 0.8rem;
       text-transform: uppercase;
@@ -159,6 +108,7 @@
 </head>
 <body>
 
+  <!-- Page header -->
   <header>
     <h1>CabsOnline</h1>
     <p>Book your cab anywhere in Auckland and surrounding areas</p>
@@ -167,6 +117,7 @@
   <div class="form-container">
     <h2>New Booking</h2>
 
+    <!-- Section 1: Customer personal details -->
     <p class="section-divider">Your Details</p>
 
     <div class="form-group">
@@ -181,6 +132,7 @@
       <span class="error-msg" id="err-phone">Phone must be 10–12 digits, numbers only.</span>
     </div>
 
+    <!-- Section 2: Pickup address -->
     <p class="section-divider">Pickup Address</p>
 
     <div class="row">
@@ -206,6 +158,7 @@
       <input type="text" id="sbname" name="sbname" placeholder="e.g. Auckland CBD" />
     </div>
 
+    <!-- Section 3: Destination and pickup time -->
     <p class="section-divider">Destination & Pickup Time</p>
 
     <div class="form-group">
@@ -216,28 +169,37 @@
     <div class="row">
       <div class="form-group">
         <label for="date">Pickup Date</label>
+        <!-- Date is type="text" to enforce DD/MM/YYYY format — set by setDefaults() on load -->
         <input type="text" id="date" name="date" placeholder="DD/MM/YYYY" />
         <span class="error-msg" id="err-date">Please enter a valid date (DD/MM/YYYY).</span>
       </div>
       <div class="form-group">
         <label for="time">Pickup Time</label>
+        <!-- Time is type="text" to enforce HH:MM 24hr format — set by setDefaults() on load -->
         <input type="text" id="time" name="time" placeholder="HH:MM" />
         <span class="error-msg" id="err-time">Please enter a valid time (HH:MM).</span>
       </div>
     </div>
 
-    <span class="error-msg" id="err-datetime" style="display:none; margin-bottom: 8px;">
+    <!-- Error shown when pickup date/time is earlier than current datetime -->
+    <span class="error-msg" id="err-datetime" style="margin-bottom: 8px;">
       Pickup date and time cannot be in the past.
     </span>
 
     <button type="button" id="submitBtn" onclick="submitBooking()">Confirm Booking</button>
 
-    <div class="confirmation" id="confirmationBox">
+    <!--
+      Confirmation box: hidden until a successful booking response is received.
+      booking.js writes the confirmation message into #reference.
+      id="reference" is required by the marking scheme.
+    -->
+    <div class="confirmation confirmation-box" id="confirmationBox">
       <p id="reference"></p>
     </div>
 
   </div>
 
+  <!-- booking.js handles all validation and fetch logic -->
   <script src="booking.js"></script>
 </body>
 </html>

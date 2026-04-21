@@ -1,0 +1,98 @@
+/*
+  Student: Rupert Guppy | ID: 23196925
+  File: style.css
+  Description: Shared stylesheet for booking.html and admin.html. Defines the
+               common visual language across both pages — typography, colour
+               palette, header bar, base input styling, button colours, and
+               error message appearance. Page-specific layout (form layout,
+               table layout) is kept inline in each HTML file.
+*/
+
+/* ── Reset ── */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ── Page base ── */
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f4f4f4;
+  color: #333;
+  padding: 30px 20px;
+}
+
+/* ── Top header bar (used on both pages) ── */
+header {
+  background-color: #1a1a2e;
+  color: white;
+  padding: 20px 30px;
+  border-radius: 8px;
+  margin-bottom: 30px;
+}
+
+header h1 {
+  font-size: 1.8rem;
+}
+
+header p {
+  font-size: 0.95rem;
+  color: #ccc;
+  margin-top: 4px;
+}
+
+/* ── Section headings inside white cards ── */
+h2 {
+  font-size: 1.2rem;
+  margin-bottom: 20px;
+  color: #1a1a2e;
+}
+
+/* ── Base input styling (shared across both pages) ── */
+input[type="text"],
+input[type="date"],
+input[type="time"] {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 0.95rem;
+}
+
+input[type="text"]:focus,
+input[type="date"]:focus,
+input[type="time"]:focus {
+  outline: none;
+  border-color: #1a1a2e;
+}
+
+/* ── Primary button colours (shared across both pages) ── */
+input[type="button"],
+button[type="button"] {
+  background-color: #1a1a2e;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+input[type="button"]:hover,
+button[type="button"]:hover {
+  background-color: #16213e;
+}
+
+/* ── Validation error messages ── */
+.error-msg {
+  color: #c0392b;
+  font-size: 0.85rem;
+  display: none;
+}
+
+/* ── Confirmation box (green success state, both pages) ── */
+.confirmation-box {
+  background-color: #eafaf1;
+  border: 1px solid #2ecc71;
+  border-radius: 8px;
+  color: #1a1a2e;
+}
