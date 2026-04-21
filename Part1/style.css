@@ -3,9 +3,9 @@
   File: style.css
   Description: Shared stylesheet for booking.html and admin.html. Defines the
                common visual language across both pages — typography, colour
-               palette, header bar, base input styling, button colours, and
-               error message appearance. Page-specific layout (form layout,
-               table layout) is kept inline in each HTML file.
+               palette, header bar, base input styling, button colours, error
+               message appearance, and the shared page-section wrapper that
+               centres content consistently across both pages.
 */
 
 /* ── Reset ── */
@@ -21,6 +21,13 @@ body {
   background-color: #f4f4f4;
   color: #333;
   padding: 30px 20px;
+}
+
+/* ── Shared centred wrapper (used by header and all card containers) ── */
+.page-section {
+  max-width: 1100px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* ── Top header bar (used on both pages) ── */

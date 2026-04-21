@@ -36,7 +36,6 @@
       background: white;
       padding: 24px;
       border-radius: 8px;
-      max-width: 700px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
       margin-bottom: 30px;
     }
@@ -59,7 +58,7 @@
 
     /* Search button padding (overrides shared base) */
     .search-row input[type="button"] {
-      padding: 10px 20px;
+      padding: 10px 24px;
     }
 
     /* Error message spacing inside the search card */
@@ -79,7 +78,6 @@
       background: white;
       border-radius: 8px;
       padding: 24px;
-      max-width: 1100px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
 
@@ -153,13 +151,13 @@
 <body>
 
   <!-- Page header -->
-  <header>
+  <header class="page-section">
     <h1>CabsOnline</h1>
     <p>Admin Panel — Manage and assign taxi bookings</p>
   </header>
 
   <!-- Search section -->
-  <div class="search-container">
+  <div class="search-container page-section">
     <h2>Search Bookings</h2>
 
     <div class="search-row">
@@ -181,7 +179,7 @@
     Table is injected here by renderTable() in admin.js.
     Confirmation message after assignment is also inserted here.
   -->
-  <div class="content" id="contentDiv">
+  <div class="content page-section" id="contentDiv">
     <p class="no-results">Use the search above to find bookings.</p>
   </div>
 
