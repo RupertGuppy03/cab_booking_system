@@ -25,12 +25,12 @@
   <style>
     /* ── Page-specific layout: booking form ── */
 
-    /* White card wrapping the form */
+    /* White card wrapping the form — wider than the default so fields can sit
+       in two columns and the whole form is visible without scrolling. */
     .form-container {
       background: white;
-      padding: 30px;
+      padding: 30px 40px;
       border-radius: 8px;
-      max-width: 600px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
 
@@ -53,15 +53,15 @@
       font-size: 0.8rem;
     }
 
-    /* Form inputs stretch full width of form card */
+    /* All inputs stretch to fill their form-group cell */
     .form-container input[type="text"] {
       width: 100%;
     }
 
-    /* Side-by-side inputs (e.g. unit + street number) */
+    /* Two-column row — used to pair fields horizontally */
     .row {
       display: flex;
-      gap: 12px;
+      gap: 16px;
     }
 
     .row .form-group {
@@ -100,36 +100,43 @@
       text-transform: uppercase;
       letter-spacing: 1px;
       color: #999;
-      margin: 20px 0 10px;
+      margin: 18px 0 10px;
       border-bottom: 1px solid #eee;
       padding-bottom: 4px;
+    }
+
+    /* Narrower max-width for the booking form so it doesn't stretch
+       uncomfortably wide on large monitors. Overrides .page-section default. */
+    .form-container.page-section {
+      max-width: 820px;
     }
   </style>
 </head>
 <body>
 
   <!-- Page header -->
-  <header>
+  <header class="page-section">
     <h1>CabsOnline</h1>
     <p>Book your cab anywhere in Auckland and surrounding areas</p>
   </header>
 
-  <div class="form-container">
+  <div class="form-container page-section">
     <h2>New Booking</h2>
 
     <!-- Section 1: Customer personal details -->
     <p class="section-divider">Your Details</p>
 
-    <div class="form-group">
-      <label for="cname">Customer Name</label>
-      <input type="text" id="cname" name="cname" placeholder="Full name" />
-      <span class="error-msg" id="err-cname">Please enter your name.</span>
-    </div>
-
-    <div class="form-group">
-      <label for="phone">Phone Number</label>
-      <input type="text" id="phone" name="phone" placeholder="10–12 digit number" />
-      <span class="error-msg" id="err-phone">Phone must be 10–12 digits, numbers only.</span>
+    <div class="row">
+      <div class="form-group">
+        <label for="cname">Customer Name</label>
+        <input type="text" id="cname" name="cname" placeholder="Full name" />
+        <span class="error-msg" id="err-cname">Please enter your name.</span>
+      </div>
+      <div class="form-group">
+        <label for="phone">Phone Number</label>
+        <input type="text" id="phone" name="phone" placeholder="10–12 digit number" />
+        <span class="error-msg" id="err-phone">Phone must be 10–12 digits, numbers only.</span>
+      </div>
     </div>
 
     <!-- Section 2: Pickup address -->
@@ -147,26 +154,26 @@
       </div>
     </div>
 
-    <div class="form-group">
-      <label for="stname">Street Name</label>
-      <input type="text" id="stname" name="stname" placeholder="e.g. Queen Street" />
-      <span class="error-msg" id="err-stname">Please enter a street name.</span>
-    </div>
-
-    <div class="form-group">
-      <label for="sbname">Suburb <span class="optional">(optional)</span></label>
-      <input type="text" id="sbname" name="sbname" placeholder="e.g. Auckland CBD" />
+    <div class="row">
+      <div class="form-group">
+        <label for="stname">Street Name</label>
+        <input type="text" id="stname" name="stname" placeholder="e.g. Queen Street" />
+        <span class="error-msg" id="err-stname">Please enter a street name.</span>
+      </div>
+      <div class="form-group">
+        <label for="sbname">Suburb <span class="optional">(optional)</span></label>
+        <input type="text" id="sbname" name="sbname" placeholder="e.g. Auckland CBD" />
+      </div>
     </div>
 
     <!-- Section 3: Destination and pickup time -->
     <p class="section-divider">Destination & Pickup Time</p>
 
-    <div class="form-group">
-      <label for="dsbname">Destination Suburb <span class="optional">(optional)</span></label>
-      <input type="text" id="dsbname" name="dsbname" placeholder="e.g. Newmarket" />
-    </div>
-
     <div class="row">
+      <div class="form-group">
+        <label for="dsbname">Destination Suburb <span class="optional">(optional)</span></label>
+        <input type="text" id="dsbname" name="dsbname" placeholder="e.g. Newmarket" />
+      </div>
       <div class="form-group">
         <label for="date">Pickup Date</label>
         <!-- Date is type="text" to enforce DD/MM/YYYY format — set by setDefaults() on load -->
