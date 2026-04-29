@@ -3,8 +3,6 @@ File: mysqlcommand.txt
 Description: Contains the MySQL CREATE TABLE command used to set up the bookings table
              for the CabsOnline taxi booking system.
 
-done!
-
 CREATE TABLE bookings (
     id INT AUTO_INCREMENT PRIMARY KEY,
     brn VARCHAR(8) NOT NULL UNIQUE,

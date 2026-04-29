@@ -4,7 +4,7 @@
   Description: Client-side logic for the CabsOnline booking form. Handles input
                validation, sets default date and time on page load, and submits
                booking data to booking.php via fetch. Displays confirmation message
-               with booking reference number, pickup date, and pickup time on success.
+               with booking reference number, pickup date, and pickup time.
 
   Functions:
     - setDefaults():    Sets the pickup date field to today (DD/MM/YYYY) and the
