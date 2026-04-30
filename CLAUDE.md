@@ -8,9 +8,23 @@ Assignment: Part 2 (35% of total grade)
 
 ## Project Overview
 
-CabsOnline is a taxi booking web app. Part 1 (complete) is a vanilla JS + PHP + MySQL system on the AUT webdev server. Part 2 extends it with a React frontend and four new features. The React app is separate — it communicates with PHP endpoints via fetch.
+CabsOnline is a taxi booking web app. Part 1 (complete) is a vanilla JS + PHP + MySQL system already deployed on the AUT webdev server. Part 2 extends it with a React frontend and four new features. The React app communicates with the existing Part 1 PHP endpoints via fetch, and with new PHP endpoints in `/assign/part2/` on webdev for any Part 2 specific server logic.
 
-**Never touch or modify any files inside `/assign/` on the AUT webdev server. All new PHP endpoints go in `/assign/part2/` only.** 
+**This repo contains Part 2 only.** Part 1 source code lives outside this repo, on the webdev server, and as a backup zip on local disk. Do not look for Part 1 files here — they intentionally are not present.
+
+---
+
+## Part 1 Location (External, Read-Only)
+
+- **Live URL:** `https://webdev.aut.ac.nz/~pxw1781/assign/`
+- **Booking page:** `https://webdev.aut.ac.nz/~pxw1781/assign/booking.html`
+- **Admin page:** `https://webdev.aut.ac.nz/~pxw1781/assign/admin.html`
+
+### Existing Part 1 endpoints Part 2 can call:
+- `POST https://webdev.aut.ac.nz/~<your-aut-username>/assign/booking.php` — creates a booking
+- `POST https://webdev.aut.ac.nz/~<your-aut-username>/assign/admin.php` — searches bookings, assigns drivers
+
+**Part 1 is locked.** It was submitted via FileZilla and timestamps are checked by the marker. Never propose modifying any file in `/assign/`. New server logic for Part 2 goes in `/assign/part2/` only.
 
 ---
 
@@ -27,6 +41,11 @@ CabsOnline is a taxi booking web app. Part 1 (complete) is a vanilla JS + PHP + 
 | Backend | PHP on AUT webdev (`/assign/part2/`) |
 | Database | Existing MySQL + new `drivers` and `trips` tables |
 | Hosting | Vercel |
+
+### Vercel Config
+- **Repo:** `RupertGuppy03/cab_booking_system`
+- **Root Directory:** `.` (repo root, not a subdirectory)
+- **Live URL:** `https://cab-booking-system-two.vercel.app/`
 
 ---
 
@@ -84,6 +103,8 @@ CREATE TABLE trips (
 
 **Error Handling (3 marks)** — All errors must show a user-facing message, never fail silently. Cover: network errors, invalid inputs, failed geocoding, polling errors, and driver ID not found.
 
+**README.DOC (12 marks)** — Required sections: public URL, tech stack, run/build instructions, API endpoints (local and remote), feature descriptions, testing instructions (sample BRNs and driver IDs), known limitations, AI reflection.
+
 ---
 
 ## Code Style
@@ -96,22 +117,24 @@ CREATE TABLE trips (
 
 ### PHP
 - snake_case for all variable and function names
-- Every PHP file must include CORS headers at the very top:
+- Every PHP file must include CORS headers at the very top
 - Use prepared statements for every MySQL query
 - Always return JSON, even for errors: `{"error": "message here"}`
-- Every PHP file must have a header comment:
+- Every PHP file must have a header comment
 
 ### General
 - No commented-out code in any file
 - 2-space indentation throughout
 - No `console.log` left in submitted code
 - Every file must have a header comment:
+```
 /**
  * Student: Rupert Guppy (23196925)
  * File: current file
  * Description: [what this file does]
  * Functions: [list any functions defined in this file]
-*/
+ */
+```
 
 ---
 
@@ -119,13 +142,15 @@ CREATE TABLE trips (
 
 1. Build and test features locally with `npm run dev`
 2. Test against live PHP endpoints on the webdev server
-3. Once a feature is finished , then ask me to push to GitHub — Vercel auto-deploys and the live URL updates automatically
+3. Once a feature is finished, ASK ME TO PUSH TO GITHUB, NEVER DO IT ON YOUR OWN — Vercel auto-deploys and the live URL updates automatically
+4. anything for the backend that is hosted on the web-dev server ask me to test. note that i will need to add these to the web-dev server myself
 
 ---
 
 ## What Not To Do
 
-- Never edit any files in `/assign/` — Part 1 is locked
+- Never edit or propose edits to any files in `/assign/` — Part 1 is locked and submitted
+- DO NOT COMMIT ANY OF YOUR CHANGES AUTOMATICALLY, ALWAYS CONFIRM WITH ME FIRST
 - No TypeScript — plain JavaScript only
 - No class components — functional only
 - No state management libraries (Redux, Zustand, etc.) — useState is sufficient
