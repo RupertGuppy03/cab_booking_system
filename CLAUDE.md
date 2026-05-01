@@ -1,26 +1,57 @@
-# CLAUDE.md — CabsOnline Part 2
+# CLAUDE.md: CabsOnline Part 2
 
 ## Who I Am
 Student: Rupert Guppy (ID: 23196925)
-Assignment: Part 2
+Assignment: Web Development Assignment, Part 2
+
 ---
+
 ## Project Overview
 
-CabsOnline is a taxi booking web app. Part 1 (complete) is a vanilla JS + PHP + MySQL system already deployed on the AUT webdev server. Part 2 extends it by first converting it to a React frontend and then adding four new features. The React app communicates with the existing Part 1 PHP endpoints via fetch, and with new PHP endpoints in `/assign/part2/` on webdev for any Part 2 specific server logic.
+CabsOnline is a taxi booking web app. Part 1 (already submitted) is a vanilla JS + PHP + MySQL system deployed on the AUT webdev server. Part 2 is a React-based refactor and extension of Part 1 where we reform and refactor out part 1 work into a fully functional react app with new features and deployed on vercel. ensure you follow the outlined workflow and ensure that any features that we make align with the feature descriptions and marking criteria
 
-**This repo contains Part 2 only.** Part 1 source code lives outside this repo, on the webdev server, and as a backup zip on local disk. Do not look for Part 1 files here — they intentionally are not present.
+The Part 2 build plan has two distinct phases:
+
+**Phase 1: Refactor.** Port Part 1's two pages (booking.html and admin.html) into modern React components that live at the repo root. The ported app uses the existing Part 1 PHP endpoints on webdev for backend logic. By the end of Phase 1, the React app should fully replicate Part 1's functionality, just rebuilt in React + Vite + Tailwind, and deployed on Vercel.
+
+**Phase 2: Extend.** Layer four new features on top of the refactored React foundation. These features build on and enhance the ported booking and admin pages rather than replace them.
+
+This order is deliberate. The assignment brief explicitly requires both refactoring AND extending Part 1 work, in that order.
 
 ---
 
-## Part 1 Location (External, Read-Only)
+## Repo Structure
 
-- **Live URL:** `https://webdev.aut.ac.nz/~pxw1781/assign/`
-- **Booking page:** `https://webdev.aut.ac.nz/~pxw1781/assign/booking.html`
-- **Admin page:** `https://webdev.aut.ac.nz/~pxw1781/assign/admin.html`
+```
+cab_booking_system/         repo root, also Vercel root
+├── Part1/                  Part 1 source, READ-ONLY reference
+├── src/                    React source for Part 2
+├── public/
+├── index.html
+├── package.json
+├── vite.config.js
+├── tailwind.config.js
+├── postcss.config.js
+├── vercel.json
+└── CLAUDE.md
+```
 
-### Existing Part 1 endpoints Part 2 can call:
-- `POST https://webdev.aut.ac.nz/~<your-aut-username>/assign/booking.php` — creates a booking
-- `POST https://webdev.aut.ac.nz/~<your-aut-username>/assign/admin.php` — searches bookings, assigns drivers
+**Important:** Part1/ exists in this repo as a read-only reference for porting work. Never modify, delete, or restructure anything in Part1/. The actual submitted Part 1 lives on the AUT webdev server and is locked. The folder here is just so you can read it for reference when porting.
+
+---
+
+## Part 1 Endpoints (Live on webdev, used by Part 2)
+
+Booking flow:
+- `POST https://webdev.aut.ac.nz/~pxw1781/assign/booking.php`
+  - Inserts a new booking, generates BRN, returns confirmation message
+
+Admin flow:
+- `POST https://webdev.aut.ac.nz/~pxw1781/assign/admin.php`
+  - Action `search`: returns booking by BRN, or all unassigned bookings due within 2 hours
+  - Action `assign`: updates a booking's status to assigned
+
+Phase 1 (the refactor) calls these existing endpoints directly. New PHP endpoints for Phase 2 features go in `/htdocs/assign/part2/` on webdev.
 
 ---
 
@@ -38,35 +69,47 @@ CabsOnline is a taxi booking web app. Part 1 (complete) is a vanilla JS + PHP + 
 | Hosting | Vercel |
 
 ### Vercel Config
-- **Repo:** `RupertGuppy03/cab_booking_system`
-- **Root Directory:** `.` (repo root, not a subdirectory)
-- **Live URL:** `https://cab-booking-system-two.vercel.app/`
+- Repo: `RupertGuppy03/cab_booking_system`
+- Root Directory: `.` (repo root)
+- Live URL: `https://cab-booking-system-two.vercel.app/`
 
 ---
 
-## The Four Features
+## Build Plan
 
-1. **Map-Based Booking** — Interactive Leaflet map replaces the Part 1 address form. Customers drop pins for pickup and destination, addresses auto-fill via Nominatim reverse geocoding, and the booking is submitted to a new PHP endpoint that inserts into the existing `bookings` table.
+### Phase 1: Refactor Part 1 into React (do first, in this order)
 
-2. **Driver Portal** — Drivers log in with a driver ID and see unassigned bookings. They can accept a job and progress its status through `assigned` → `in_progress` → `completed`, with each change saved to the DB via fetch.
+1.1. Port `Part1/booking.html` + `Part1/booking.js` + `Part1/style.css` into a React `BookingPage` component at `src/pages/BookingPage.jsx`. Call the existing `booking.php` on webdev. Preserve all Part 1 fields, validation, default date/time behaviour, error messages, and the BRN confirmation message.
 
-3. **Live Booking Tracker** — Customers enter a BRN to view their booking's current status as a visual progress indicator. A Leaflet map shows pickup and destination pins. The page polls the backend every 5 seconds to reflect status changes made by the driver portal.
+1.2. Port `Part1/admin.html` + `Part1/admin.js` into a React `AdminPage` component at `src/pages/AdminPage.jsx`. Call the existing `admin.php` on webdev. Preserve all Part 1 search behaviour (BRN format check, empty-search-shows-2hr-window), the results table columns, and the assign flow.
 
-4. **Fare Estimator + Trip History** — A live fare estimate (based on straight-line distance between pins using the Haversine formula) updates as pins move on the booking map. A separate "My Trips" page lets customers enter their phone number to view all past bookings, fares, and statuses in a sortable table.
+1.3. Test both pages on Vercel against the live PHP endpoints. Confirm bookings actually insert into the DB and the admin page actually assigns.
+
+### Phase 2: Build the four features (do after Phase 1 is working)
+
+These features extend the refactored Part 1 React foundation.
+
+2.1. **Map-Based Booking** extends the booking page. Replaces the address text inputs with a Leaflet map where customers drop pins for pickup and destination. Uses Nominatim reverse geocoding to populate the original Part 1 address fields. Submits to a new PHP endpoint that writes to the existing `bookings` table plus the new `trips` table for coordinates.
+
+2.2. **Driver Portal** extends the admin concept into a driver-facing page. Drivers log in with a driver ID, see unassigned bookings, and progress them through `assigned` to `in_progress` to `completed`.
+
+2.3. **Live Booking Tracker** is a new customer-facing page. Customers enter a BRN to view current status as a visual progress indicator with a Leaflet map showing pickup and destination. Polls the backend every 5 seconds.
+
+2.4. **Fare Estimator + Trip History** combines a live Haversine fare estimate on the booking page with a separate `MyTripsPage` where customers enter their phone number to see all past bookings.
 
 ---
 
 ## Database Schema
 
-### Existing table
+### Existing (Phase 1 uses this)
 ```sql
 bookings (
   id, brn, cname, phone, unumber, snumber, stname, sbname, dsbname,
-  pickup_date, pickup_time, booking_datetime, status(assigned or unassigned)
+  pickup_date, pickup_time, booking_datetime, status
 )
 ```
 
-### New tables for Part 2
+### New for Phase 2
 ```sql
 CREATE TABLE drivers (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -90,7 +133,7 @@ CREATE TABLE trips (
 
 ---
 
-## Marking Criteria, must meet these
+## Marking Criteria (must hit all of these)
 
 **Functionality (10 marks)** — All four features must work end-to-end with real backend interaction, real map usage, and real DB queries. The driver portal and tracker must be visibly connected — driver actions must update what the customer sees.
 
@@ -100,48 +143,70 @@ CREATE TABLE trips (
 
 **README.DOC (12 marks)** — Required sections: public URL, tech stack, run/build instructions, API endpoints (local and remote), feature descriptions, testing instructions (sample BRNs and driver IDs), known limitations, AI reflection.
 
-also ensure you use a consistant ncoding style i.e camelccase and ensure that any code you generate has the correct comments at the top of the file an throught the various functions
-
+also ensure you use a consistant coding style i.e camelccase and ensure that any code you generate has the correct comments at the top of the file an throught the various functions
 ---
 
-### Code Style
+## Code Style
 
-React / JavaScript
+### React / JavaScript
 - camelCase for variables and functions, PascalCase for components
+- Functional components only, no class components
+- Hooks for state and side effects
 
-PHP
-- snake_case for all variable and function names
-- Every PHP file must have a header comment
+### PHP
+- snake_case for variables and functions
+- Every PHP file gets a header comment
 
-General Comments
-- No commented-out code in any file
-- The code in the file must follow readable structure, no messy code with incorrect spacing
-- all functions must have a short, high level description of what it does so when the marker is checking the code, they can understand what they are reading
-- Every file must have a header comment:
+### Comments and Headers
+- No commented-out code anywhere in submitted files
+- All functions get a short, high-level description so a marker can read and understand them quickly
+- Every file starts with this header block:
+
 ```
 /**
  * Student: Rupert Guppy (23196925)
- * File: current file
- * Description: [what this file does]
- * Functions: [list any functions defined in this file]
+ * File: <filename>
+ * Description: <what this file does>
+ * Functions: <list of functions defined in this file>
  */
 ```
+
+### Formatting
+- Consistent indentation throughout
+- No messy spacing or trailing junk
+- One concern per file
 
 ---
 
 ## Workflow
-1. one feature or task at a time, dont try do the whole assignment in one go
-2. once a feature is finished, test it locally and ensure that it passes and is robust to pass error handling and follows the marking criteria and feature descriptions
+
+1. **One feature or task at a time.** Never try to do the whole assignment in one go. Each Claude Code session should focus on a single bounded task from the build plan. follow the build plan, ensure added features meet the feature descriptions and any code genrerated must aim to eventually meet the marking criteria
+2. **Test locally before considering anything done.** Run `npm run dev`, click through the feature, confirm it works against the real backend. 
 3. Once a feature is finished, ASK ME TO PUSH TO GITHUB, NEVER DO IT ON YOUR OWN — Vercel then auto-deploys and the live URL updates automatically once I MAKE THE COMMIT
-4. anything for the backend that is hosted on the web-dev server ask me to test. note that i will need to add these to the web-dev server myself
+4. **Backend changes require Rupert to deploy manually.** Any new PHP file needs to be uploaded to webdev by myself via FileZilla. After writing any PHP, clearly list the files I needs to upload and where they go on the server.
 
 ---
 
-## What Not To Do
-- DO NOT COMMIT ANY OF YOUR CHANGES AUTOMATICALLY, ALWAYS CONFIRM WITH ME FIRST
-- No class components — functional only
-- No Google Maps — Leaflet + OpenStreetMap only
-- No placeholder text or debug buttons in the final UI
-- No commented-out code in submitted files
-- Dont try work on multiple features or steps at once, just one feature at a time
-- 
+## ABSOLUTE RULES (zero tolerance)
+
+### I control git overall. You do not.
+
+Under no circumstances run any git command that modifies repo state. This includes but is not limited to. Read-only git commands such as `git status`, `git log`, `git diff` are fine when needed for context.
+
+When you finish a task:
+1. Summarise what files changed.
+2. Tell Rupert it is ready for him to review and commit.
+
+### Do not modify Part1/
+
+The Part1/ folder is read-only reference material. Never edit, rename, restructure, delete, or write new files inside Part1/.
+
+---
+
+## What Not To Do (other rules)
+- DO NOT COMMIT ANY OF YOUR CHANGES WITH GITHUB AUTOMATICALLY, ALWAYS CONFIRM WITH ME FIRST
+- Do not use class components. Functional only.
+- Do not use Google Maps. Leaflet + OpenStreetMap only.
+- Do not leave placeholder text, debug buttons, or commented-out code in submitted files.
+- Do not invent new API endpoints, table names, or column names. Use the schema and endpoints documented above. If something is missing, ask.
+e
