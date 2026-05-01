@@ -2,24 +2,33 @@
 
 ## Who I Am
 Student: Rupert Guppy (ID: 23196925)
-Assignment: Part 2 (35% of total grade)
+Assignment: Part 2
+---
+## Project Overview
+
+CabsOnline is a taxi booking web app. Part 1 (complete) is a vanilla JS + PHP + MySQL system already deployed on the AUT webdev server. Part 2 extends it by first converting it to a React frontend and then adding four new features. The React app communicates with the existing Part 1 PHP endpoints via fetch, and with new PHP endpoints in `/assign/part2/` on webdev for any Part 2 specific server logic.
+
+**This repo contains Part 2 only.** Part 1 source code lives outside this repo, on the webdev server, and as a backup zip on local disk. Do not look for Part 1 files here — they intentionally are not present.
 
 ---
 
-## Project Overview
+## Part 1 Location (External, Read-Only)
 
-CabsOnline is a taxi booking web app. Part 1 (complete) is a vanilla JS + PHP + MySQL system on the AUT webdev server. Part 2 extends it with a React frontend and four new features. The React app is separate — it communicates with PHP endpoints via fetch.
+- **Live URL:** `https://webdev.aut.ac.nz/~pxw1781/assign/`
+- **Booking page:** `https://webdev.aut.ac.nz/~pxw1781/assign/booking.html`
+- **Admin page:** `https://webdev.aut.ac.nz/~pxw1781/assign/admin.html`
 
-**Never touch or modify any files inside `/assign/` on the AUT webdev server. All new PHP endpoints go in `/assign/part2/` only.** 
+### Existing Part 1 endpoints Part 2 can call:
+- `POST https://webdev.aut.ac.nz/~<your-aut-username>/assign/booking.php` — creates a booking
+- `POST https://webdev.aut.ac.nz/~<your-aut-username>/assign/admin.php` — searches bookings, assigns drivers
 
 ---
 
 ## Tech Stack
-
 | Layer | Choice |
-|---|---|
+|-------|--------|
 | Build tool | Vite |
-| Framework | React 18 (JavaScript) |
+| Framework | React 18 |
 | Styling | Tailwind CSS |
 | Routing | React Router v6 |
 | Maps | react-leaflet + OpenStreetMap |
@@ -27,6 +36,11 @@ CabsOnline is a taxi booking web app. Part 1 (complete) is a vanilla JS + PHP + 
 | Backend | PHP on AUT webdev (`/assign/part2/`) |
 | Database | Existing MySQL + new `drivers` and `trips` tables |
 | Hosting | Vercel |
+
+### Vercel Config
+- **Repo:** `RupertGuppy03/cab_booking_system`
+- **Root Directory:** `.` (repo root, not a subdirectory)
+- **Live URL:** `https://cab-booking-system-two.vercel.app/`
 
 ---
 
@@ -44,11 +58,11 @@ CabsOnline is a taxi booking web app. Part 1 (complete) is a vanilla JS + PHP + 
 
 ## Database Schema
 
-### Existing table (Part 1 — do not modify)
+### Existing table
 ```sql
 bookings (
   id, brn, cname, phone, unumber, snumber, stname, sbname, dsbname,
-  pickup_date, pickup_time, booking_datetime, status
+  pickup_date, pickup_time, booking_datetime, status(assigned or unassigned)
 )
 ```
 
@@ -84,51 +98,50 @@ CREATE TABLE trips (
 
 **Error Handling (3 marks)** — All errors must show a user-facing message, never fail silently. Cover: network errors, invalid inputs, failed geocoding, polling errors, and driver ID not found.
 
+**README.DOC (12 marks)** — Required sections: public URL, tech stack, run/build instructions, API endpoints (local and remote), feature descriptions, testing instructions (sample BRNs and driver IDs), known limitations, AI reflection.
+
+also ensure you use a consistant ncoding style i.e camelccase and ensure that any code you generate has the correct comments at the top of the file an throught the various functions
+
 ---
 
-## Code Style
+### Code Style
 
-### React / JavaScript
+React / JavaScript
 - camelCase for variables and functions, PascalCase for components
-- One component per file, functional components only
-- `async/await` for all fetch calls — never `.then()` chains
-- Always wrap fetch in `try/catch` and set an error state
 
-### PHP
+PHP
 - snake_case for all variable and function names
-- Every PHP file must include CORS headers at the very top:
-- Use prepared statements for every MySQL query
-- Always return JSON, even for errors: `{"error": "message here"}`
-- Every PHP file must have a header comment:
+- Every PHP file must have a header comment
 
-### General
+General Comments
 - No commented-out code in any file
-- 2-space indentation throughout
-- No `console.log` left in submitted code
+- The code in the file must follow readable structure, no messy code with incorrect spacing
+- all functions must have a short, high level description of what it does so when the marker is checking the code, they can understand what they are reading
 - Every file must have a header comment:
+```
 /**
  * Student: Rupert Guppy (23196925)
  * File: current file
  * Description: [what this file does]
  * Functions: [list any functions defined in this file]
-*/
+ */
+```
 
 ---
 
 ## Workflow
-
-1. Build and test features locally with `npm run dev`
-2. Test against live PHP endpoints on the webdev server
-3. Once a feature is finished , then ask me to push to GitHub — Vercel auto-deploys and the live URL updates automatically
+1. one feature or task at a time, dont try do the whole assignment in one go
+2. once a feature is finished, test it locally and ensure that it passes and is robust to pass error handling and follows the marking criteria and feature descriptions
+3. Once a feature is finished, ASK ME TO PUSH TO GITHUB, NEVER DO IT ON YOUR OWN — Vercel then auto-deploys and the live URL updates automatically once I MAKE THE COMMIT
+4. anything for the backend that is hosted on the web-dev server ask me to test. note that i will need to add these to the web-dev server myself
 
 ---
 
 ## What Not To Do
-
-- Never edit any files in `/assign/` — Part 1 is locked
-- No TypeScript — plain JavaScript only
+- DO NOT COMMIT ANY OF YOUR CHANGES AUTOMATICALLY, ALWAYS CONFIRM WITH ME FIRST
 - No class components — functional only
-- No state management libraries (Redux, Zustand, etc.) — useState is sufficient
 - No Google Maps — Leaflet + OpenStreetMap only
 - No placeholder text or debug buttons in the final UI
 - No commented-out code in submitted files
+- Dont try work on multiple features or steps at once, just one feature at a time
+- 
