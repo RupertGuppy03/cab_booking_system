@@ -11,6 +11,7 @@ import { NavLink } from 'react-router-dom';
 
 const navLinks = [
   { to: '/', label: 'Book a Cab' },
+  { to: '/admin', label: 'Admin' },
   { to: '/driver', label: 'Driver Portal' },
   { to: '/tracker', label: 'Track Booking' },
   { to: '/trips', label: 'My Trips' },
