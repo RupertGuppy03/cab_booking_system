@@ -1,3 +1,13 @@
 {
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  "rewrites": [
+    {
+      "source": "/api/admin",
+      "destination": "https://webdev.aut.ac.nz/~pxw1781/assign/Part2/admin.php"
+    },
+    {
+      "source": "/api/booking",
+      "destination": "https://webdev.aut.ac.nz/~pxw1781/assign/Part2/booking.php"
+    },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }

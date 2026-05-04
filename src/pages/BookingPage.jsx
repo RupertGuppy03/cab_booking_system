@@ -10,7 +10,7 @@
 
 import { useState, useEffect } from 'react';
 
-const BOOKING_URL = 'https://webdev.aut.ac.nz/~pxw1781/assign/Part2/booking.php';
+const BOOKING_URL = '/api/booking';
 
 /** Checks that dateStr matches DD/MM/YYYY and represents a real calendar date. */
 function isValidDate(dateStr) {
