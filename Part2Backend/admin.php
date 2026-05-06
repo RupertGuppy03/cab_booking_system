@@ -1,41 +1,30 @@
 <?php
+/*
+  Student: Rupert Guppy (23196925)
+  File: admin.php
+  Description: Part 2 backend handler for the CabsOnline admin panel. Responds to two
+               types of POST requests from the React frontend — booking searches and
+               taxi assignment updates. For searches, returns a JSON array of matching
+               bookings. For assignments, updates a booking's status to assigned and
+               returns a plain text confirmation message.
+
+  Functions:
+    - sanitise_input(): Trims whitespace and strips HTML/PHP tags from a string.
+    - handle_search():  Queries the database for a specific BRN or all unassigned
+                        bookings due within 2 hours. Returns results as JSON.
+    - handle_assign():  Updates a booking's status from unassigned to assigned.
+                        Returns a plain text confirmation message.
+*/
+
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { exit(0); }
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { exit; }
 
-/*
-  Student: Rupert Guppy | ID: 23196925
-  File: admin.php
-  Description: Server-side handler for the CabsOnline admin panel. Responds to two
-               types of POST requests — booking searches and taxi assignment updates.
-               For searches, queries the database for a specific booking by BRN or
-               returns all unassigned bookings with a pickup time within 2 hours of
-               the current time. For assignments, updates the status of a booking
-               from unassigned to assigned and returns a confirmation message.
-               CORS headers are included so the React frontend on Vercel can call
-               this endpoint cross-origin.
-
-  Functions:
-    - sanitise_input(): Trims whitespace and strips HTML/PHP tags from a given string
-                        to prevent XSS and injection via user inputs.
-    - handle_search():  Queries the database based on the bsearch value. If a BRN is
-                        provided, returns the matching record. If empty, returns all
-                        unassigned bookings with a pickup time within 2 hours of now.
-                        Returns results as a JSON encoded array.
-    - handle_assign():  Receives a BRN and updates the matching record's status from
-                        unassigned to assigned in the database. Returns a plain text
-                        confirmation message containing the BRN.
-*/
-
-/*
-  Database connection constants.
-*/
 define('DB_HOST', 'localhost');
 define('DB_USER', 'pxw1781');
 define('DB_PASS', 'uhqdtgqqoqcjwsrogzppzinqasodkdl');
 define('DB_NAME', 'pxw1781');
-
 
 /*
   sanitise_input(value)
@@ -46,13 +35,12 @@ function sanitise_input($value) {
     return strip_tags(trim($value));
 }
 
-
 /*
   handle_search(conn, bsearch)
-  If bsearch is non-empty, queries the database for the record matching that BRN.
-  If bsearch is empty, queries for all unassigned bookings with a pickup time
+  If bsearch is non-empty, queries for the record matching that BRN.
+  If bsearch is empty, returns all unassigned bookings with a pickup time
   within 2 hours of the current server time.
-  Returns the results as a JSON encoded array.
+  Returns the results as a JSON-encoded array.
 */
 function handle_search($conn, $bsearch) {
     if ($bsearch !== '') {
@@ -85,12 +73,10 @@ function handle_search($conn, $bsearch) {
     echo json_encode($records);
 }
 
-
 /*
   handle_assign(conn, brn)
   Updates the status of the booking matching the given BRN from unassigned
-  to assigned in the database. Returns a plain text confirmation message
-  containing the BRN.
+  to assigned. Returns a plain text confirmation message.
 */
 function handle_assign($conn, $brn) {
     $stmt = mysqli_prepare($conn,
@@ -107,7 +93,6 @@ function handle_assign($conn, $brn) {
 
     mysqli_stmt_close($stmt);
 }
-
 
 /*
   Main execution — only runs when the request method is POST.
