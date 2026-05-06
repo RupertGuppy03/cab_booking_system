@@ -10,7 +10,7 @@
 
 import { useState } from 'react';
 
-const ADMIN_URL = '/api/admin';
+const ADMIN_URL = 'https://webdev.aut.ac.nz/~pxw1781/assign/Part2/admin.php';
 
 /** Checks whether a string matches the BRN format: BRN followed by exactly 5 digits. */
 function validateBrn(brn) {

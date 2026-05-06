@@ -1,30 +1,24 @@
 <?php
+/*
+  Student: Rupert Guppy (23196925)
+  File: booking.php
+  Description: Part 2 backend handler for the CabsOnline booking form. Receives POST
+               data from the React frontend, sanitises inputs, generates a unique
+               booking reference number (BRN), and inserts the record into the MySQL
+               bookings table. Returns an HTML confirmation message with the BRN,
+               pickup date, and pickup time.
+
+  Functions:
+    - sanitise_input(): Trims whitespace and strips HTML/PHP tags from a string.
+    - generate_brn():   Queries the database for the highest existing BRN, increments
+                        it, and returns the next BRN in BRN00001 format.
+*/
+
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { exit(0); }
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { exit; }
 
-/*
-  Student: Rupert Guppy | ID: 23196925
-  File: booking.php
-  Description: Server-side handler for the CabsOnline booking form. Receives POST data
-               from the React frontend, sanitises inputs, generates a unique booking
-               reference number (BRN), booking datetime, and status, then inserts the
-               full record into the MySQL bookings table. Returns an HTML confirmation
-               message containing the booking reference number, pickup date, and pickup
-               time. CORS headers are included so the React frontend on Vercel can call
-               this endpoint cross-origin.
-
-  Functions:
-    - sanitise_input(): Trims whitespace and strips HTML/PHP tags from a given string
-                        to prevent XSS and injection via user inputs.
-    - generate_brn():   Queries the database for the highest existing BRN number,
-                        increments it by one, and returns the next BRN in BRN00001 format.
-*/
-
-/*
-  Database connection constants.
-*/
 define('DB_HOST', 'localhost');
 define('DB_USER', 'pxw1781');
 define('DB_PASS', 'uhqdtgqqoqcjwsrogzppzinqasodkdl');
@@ -43,7 +37,6 @@ function sanitise_input($value) {
   generate_brn(conn)
   Queries the bookings table for the highest BRN number currently stored.
   Increments it by one and returns the next BRN formatted as BRN00001.
-  Returns the generated BRN string.
 */
 function generate_brn($conn) {
     $query = "SELECT MAX(CAST(SUBSTRING(brn, 4) AS UNSIGNED)) AS max_num FROM bookings";
@@ -68,19 +61,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    $cname   = sanitise_input($_POST['cname']);
-    $phone   = sanitise_input($_POST['phone']);
-    $unumber = sanitise_input($_POST['unumber']);
-    $snumber = sanitise_input($_POST['snumber']);
-    $stname  = sanitise_input($_POST['stname']);
-    $sbname  = sanitise_input($_POST['sbname']);
-    $dsbname = sanitise_input($_POST['dsbname']);
+    $cname       = sanitise_input($_POST['cname']);
+    $phone       = sanitise_input($_POST['phone']);
+    $unumber     = sanitise_input($_POST['unumber']);
+    $snumber     = sanitise_input($_POST['snumber']);
+    $stname      = sanitise_input($_POST['stname']);
+    $sbname      = sanitise_input($_POST['sbname']);
+    $dsbname     = sanitise_input($_POST['dsbname']);
     $pickup_date = sanitise_input($_POST['date']);
     $pickup_time = sanitise_input($_POST['time']);
 
-    $brn = generate_brn($conn);
+    $brn              = generate_brn($conn);
     $booking_datetime = date('Y-m-d H:i:s');
-    $status = 'unassigned';
+    $status           = 'unassigned';
 
     $stmt = mysqli_prepare($conn,
         "INSERT INTO bookings

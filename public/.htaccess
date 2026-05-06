@@ -1,0 +1,5 @@
+Options -MultiViews
+RewriteEngine On
+RewriteBase /~pxw1781/assign/Part2/
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^ index.html [QSA,L]

@@ -15,7 +15,7 @@ import TripHistoryPage from './pages/TripHistoryPage';
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/~pxw1781/assign/Part2">
       <Layout>
         <Routes>
           <Route path="/" element={<BookingPage />} />
