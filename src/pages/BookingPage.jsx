@@ -5,11 +5,14 @@
  *              inputs (snumber, stname, sbname, dsbname). An optional map toggle reveals
  *              a Leaflet map where customers drop pins for pickup and destination;
  *              Nominatim reverse geocoding then populates the address fields and a
- *              Haversine fare estimate is shown. Text mode posts to booking.php; map
- *              mode posts to map_booking.php which also writes coordinates to the trips
- *              table.
- * Functions: BookingPage, MapClickHandler, geocodePin, haversineKm,
- *            isValidDate, isValidTime, isNotPast
+ *              Haversine fare estimate is shown. Pickup must resolve to a road-accessible
+ *              address — if geocoding fails or times out for pickup, submission is blocked.
+ *              Destination may be unknown (e.g. island or wilderness); booking proceeds
+ *              with 'UNKNOWN' stored and a warning shown to confirm with the driver.
+ *              Text mode posts to booking.php; map mode posts to map_booking.php which
+ *              also writes coordinates to the trips table.
+ * Functions: BookingPage, MapClickHandler, geocodePin, isUnreachableLocation,
+ *            haversineKm, isValidDate, isValidTime, isNotPast
  */
 
 import { useState, useEffect } from 'react';
@@ -38,6 +41,16 @@ const destIcon = L.divIcon({
   iconAnchor: [9, 18],
   popupAnchor: [0, -20],
 });
+
+/**
+ * Returns true if the Nominatim response indicates the location has no car-accessible
+ * road. Only road, pedestrian, and service tags indicate a taxi can reach the spot —
+ * walking paths and cycleways do not count.
+ */
+function isUnreachableLocation(data) {
+  const addr = data.address || {};
+  return !(addr.road || addr.pedestrian || addr.service);
+}
 
 /** Returns the great-circle distance in km between two lat/lng points using the Haversine formula. */
 function haversineKm(lat1, lng1, lat2, lng2) {
@@ -92,6 +105,8 @@ export default function BookingPage() {
   const [geocoding, setGeocoding] = useState(false);
   const [geocodeError, setGeocodeError] = useState('');
   const [fareEstimate, setFareEstimate] = useState(null);
+  const [pickupUnreachable, setPickupUnreachable] = useState(false);
+  const [destUnreachable, setDestUnreachable] = useState(false);
 
   /** Populates the date (DD/MM/YYYY) and time (HH:MM) fields with the current date and time on mount. */
   useEffect(() => {
@@ -109,7 +124,7 @@ export default function BookingPage() {
     setFields(prev => ({ ...prev, [name]: value }));
   }
 
-  /** Toggles the map on or off. Clears map state and any map-related errors when hiding. */
+  /** Toggles the map on or off. Clears all map state when hiding. */
   function toggleMap() {
     if (showMap) {
       setPickupPin(null);
@@ -117,41 +132,74 @@ export default function BookingPage() {
       setFareEstimate(null);
       setGeocodeError('');
       setPinMode('pickup');
+      setPickupUnreachable(false);
+      setDestUnreachable(false);
       setErrors(prev => {
         const next = { ...prev };
         delete next.pickupPin;
         delete next.destPin;
+        delete next.geocoding;
         return next;
       });
     }
     setShowMap(prev => !prev);
   }
 
-  /** Calls Nominatim reverse geocoding for a lat/lng and updates the relevant address fields. */
+  /**
+   * Calls Nominatim reverse geocoding for a lat/lng with a 10-second timeout.
+   * Pickup failures (unreachable or network error) set pickupUnreachable and block submission.
+   * Destination failures set destUnreachable and store 'UNKNOWN' so the booking can still proceed.
+   */
   async function geocodePin(lat, lng, type) {
     setGeocoding(true);
     setGeocodeError('');
+    if (type === 'pickup') setPickupUnreachable(false);
+    else setDestUnreachable(false);
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
     try {
       const res = await fetch(
         `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
-        { headers: { 'Accept-Language': 'en' } }
+        { headers: { 'Accept-Language': 'en' }, signal: controller.signal }
       );
-      if (!res.ok) throw new Error('Geocoding request failed');
+      clearTimeout(timeoutId);
+      if (!res.ok) throw new Error('bad_response');
       const data = await res.json();
       const addr = data.address || {};
       const suburb = addr.suburb || addr.city_district || addr.neighbourhood || addr.town || '';
-      if (type === 'pickup') {
-        setFields(prev => ({
-          ...prev,
-          snumber: addr.house_number || '',
-          stname: addr.road || addr.pedestrian || addr.path || '',
-          sbname: suburb,
-        }));
+
+      if (isUnreachableLocation(data)) {
+        if (type === 'pickup') {
+          setPickupUnreachable(true);
+        } else {
+          setDestUnreachable(true);
+          setFields(prev => ({ ...prev, dsbname: 'UNKNOWN' }));
+        }
       } else {
-        setFields(prev => ({ ...prev, dsbname: suburb }));
+        if (type === 'pickup') {
+          setFields(prev => ({
+            ...prev,
+            snumber: addr.house_number || '',
+            stname: addr.road || addr.pedestrian || addr.path || '',
+            sbname: suburb,
+          }));
+        } else {
+          setFields(prev => ({ ...prev, dsbname: suburb }));
+        }
       }
-    } catch {
-      setGeocodeError('Could not look up address for that location. Your pin is still saved — the coordinates will be recorded with your booking.');
+    } catch (err) {
+      clearTimeout(timeoutId);
+      if (type === 'pickup') {
+        setPickupUnreachable(true);
+      } else {
+        setDestUnreachable(true);
+        setFields(prev => ({ ...prev, dsbname: 'UNKNOWN' }));
+      }
+      if (err.name !== 'AbortError') {
+        setGeocodeError('Could not look up address for that location.');
+      }
     } finally {
       setGeocoding(false);
     }
@@ -161,6 +209,7 @@ export default function BookingPage() {
   function handleMapClick(lat, lng) {
     setGeocodeError('');
     if (pinMode === 'pickup') {
+      setPickupUnreachable(false);
       setPickupPin({ lat, lng });
       geocodePin(lat, lng, 'pickup');
       if (destPin) {
@@ -168,6 +217,7 @@ export default function BookingPage() {
         setFareEstimate(Math.max(MIN_FARE, km * FARE_RATE));
       }
     } else {
+      setDestUnreachable(false);
       setDestPin({ lat, lng });
       geocodePin(lat, lng, 'dest');
       if (pickupPin) {
@@ -178,16 +228,18 @@ export default function BookingPage() {
   }
 
   /**
-   * Validates all required fields. In map mode, requires both pins to be placed.
-   * In text mode, requires snumber and stname to be filled in.
-   * Returns an errors object — empty means valid.
+   * Validates all required fields. In map mode, blocks if geocoding is in progress,
+   * if either pin is missing, or if the pickup location is unreachable.
+   * Destination being unreachable does NOT block submission.
    */
   function validateForm() {
     const errs = {};
     if (!fields.cname.trim()) errs.cname = 'Please enter your name.';
     if (!/^\d{10,12}$/.test(fields.phone.trim())) errs.phone = 'Phone must be 10–12 digits, numbers only.';
     if (showMap) {
+      if (geocoding) errs.geocoding = 'Please wait while we look up your address.';
       if (!pickupPin) errs.pickupPin = 'Please drop a pickup pin on the map.';
+      else if (pickupUnreachable) errs.pickupPin = "Pickup location cannot be reached by road. Please choose a location on a street, or click 'Hide Map' to enter your address manually.";
       if (!destPin) errs.destPin = 'Please drop a destination pin on the map.';
     } else {
       if (!fields.snumber.trim()) errs.snumber = 'Please enter a street number.';
@@ -204,6 +256,7 @@ export default function BookingPage() {
   /**
    * Validates the form then POSTs to the appropriate endpoint.
    * Text mode → booking.php. Map mode → map_booking.php (also records coordinates in trips).
+   * In map mode the fare (or unknown-destination warning) is appended to the PHP confirmation.
    */
   async function submitBooking() {
     const errs = validateForm();
@@ -223,12 +276,20 @@ export default function BookingPage() {
       formData.append('pickup_lng', pickupPin.lng);
       formData.append('dest_lat', destPin.lat);
       formData.append('dest_lng', destPin.lng);
-      formData.append('fare_estimate', fareEstimate ? fareEstimate.toFixed(2) : '0.00');
+      formData.append('fare_estimate', fareEstimate && !destUnreachable ? fareEstimate.toFixed(2) : '0.00');
     }
 
     try {
       const response = await fetch(endpoint, { method: 'POST', body: formData });
-      setConfirmation(await response.text());
+      let confirmText = await response.text();
+      if (showMap) {
+        if (destUnreachable) {
+          confirmText += '<br><strong style="color:#d97706">&#9888; Destination unknown — please confirm your destination with the driver on arrival. Fare estimate unavailable.</strong>';
+        } else if (fareEstimate !== null) {
+          confirmText += `<br>Estimated fare: <strong>$${fareEstimate.toFixed(2)}</strong>`;
+        }
+      }
+      setConfirmation(confirmText);
     } catch {
       setConfirmation('An error occurred while submitting your booking. Please try again.');
     } finally {
@@ -334,6 +395,9 @@ export default function BookingPage() {
           {(errors.pickupPin || errors.destPin) && (
             <p className="text-red-600 text-xs mb-2">{errors.pickupPin || errors.destPin}</p>
           )}
+          {errors.geocoding && (
+            <p className="text-red-500 text-xs mb-2">{errors.geocoding}</p>
+          )}
 
           <div className="rounded overflow-hidden border border-gray-200 mb-3" style={{ height: '300px' }}>
             <MapContainer center={AUCKLAND_CENTER} zoom={13} style={{ height: '100%', width: '100%' }}>
@@ -358,21 +422,38 @@ export default function BookingPage() {
           {geocoding && <p className="text-xs text-gray-500 mb-2">Locating address…</p>}
           {geocodeError && <p className="text-xs text-red-500 mb-2">{geocodeError}</p>}
 
+          {pickupUnreachable && (
+            <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2 mb-2">
+              ✕ Pickup location cannot be reached by road. Please choose a location on a street, or click &lsquo;Hide Map&rsquo; to enter your address manually.
+            </p>
+          )}
+          {destUnreachable && (
+            <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded px-3 py-2 mb-2">
+              ⚠ Destination cannot be confirmed. Fare estimate unavailable — please discuss with your driver on arrival.
+            </p>
+          )}
+
           {(pickupPin || destPin) && (
             <div className="bg-gray-50 border border-gray-200 rounded p-3 text-sm mb-3 space-y-1">
               {pickupPin && (
                 <p className="text-gray-700">
                   <span className="font-semibold text-brand">Pickup:</span>{' '}
-                  {[fields.snumber, fields.stname, fields.sbname].filter(Boolean).join(', ') || 'Address loading…'}
+                  {pickupUnreachable
+                    ? <span className="text-red-600">Cannot determine pickup — please re-pin or use manual entry</span>
+                    : [fields.snumber, fields.stname, fields.sbname].filter(Boolean).join(', ') || 'Address loading…'
+                  }
                 </p>
               )}
               {destPin && (
                 <p className="text-gray-700">
                   <span className="font-semibold text-red-500">Destination:</span>{' '}
-                  {fields.dsbname || 'Suburb loading…'}
+                  {destUnreachable
+                    ? <span className="text-amber-600">Unknown destination</span>
+                    : fields.dsbname || 'Suburb loading…'
+                  }
                 </p>
               )}
-              {fareEstimate !== null && (
+              {fareEstimate !== null && !pickupUnreachable && !destUnreachable && (
                 <p className="text-gray-800 font-medium pt-1 border-t border-gray-200 mt-1">
                   Estimated fare: <span className="text-brand">${fareEstimate.toFixed(2)}</span>
                 </p>
@@ -385,16 +466,18 @@ export default function BookingPage() {
       {/* Destination & Pickup Time */}
       <p className={dividerClass}>Destination &amp; Pickup Time</p>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div>
-          <label className={labelClass}>Destination Suburb <span className="font-normal text-gray-400 text-xs">(optional)</span></label>
-          <input
-            className={inputClass}
-            name="dsbname"
-            placeholder="e.g. Newmarket"
-            value={fields.dsbname}
-            onChange={handleChange}
-          />
-        </div>
+        {!showMap && (
+          <div>
+            <label className={labelClass}>Destination Suburb <span className="font-normal text-gray-400 text-xs">(optional)</span></label>
+            <input
+              className={inputClass}
+              name="dsbname"
+              placeholder="e.g. Newmarket"
+              value={fields.dsbname}
+              onChange={handleChange}
+            />
+          </div>
+        )}
         <div>
           <label className={labelClass} htmlFor="date">Pickup Date</label>
           <input className={inputClass} id="date" name="date" placeholder="DD/MM/YYYY" value={fields.date} onChange={handleChange} />
