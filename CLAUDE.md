@@ -108,7 +108,7 @@ note that all new endpoints now developed need to reference our new Part2 direct
 
 2.1. **Map-Based Booking** — extends the booking page. Replaces the address text inputs with a Leaflet map where customers drop pins for pickup and destination. Uses Nominatim reverse geocoding to populate the Part 1 address fields. Submits to `map_booking.php` which writes to the existing `bookings` table plus the new `trips` table for coordinates.
 
-2.2. **Driver Portal** — extends the admin concept into a driver-facing page. Drivers log in with a driver ID, see unassigned bookings, and progress them through `assigned` → `in_progress` → `completed` via `driver.php`.
+2.2. **Driver Portal** — extends the admin concept into a driver-facing page. Drivers log in with a driver ID, see unassigned bookings, and progress them through `assigned` → `in_progress` → `completed` via `driver.php`. Drivers can accept a job, which updates the booking's status from unassigned to assigned, and later mark it as in progress or completed as the ride progresses. 
 
 2.3. **Live Booking Tracker** — customer-facing page. Customers enter a BRN to view current status as a visual progress indicator with a Leaflet map showing pickup and destination. Polls `tracker.php` every 5 seconds.
 
