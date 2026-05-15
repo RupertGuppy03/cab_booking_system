@@ -67,15 +67,11 @@ function TripMap({ trip }) {
   const centerLng = (pickupLng + destLng) / 2;
 
   return (
-    <div className="mt-3 rounded overflow-hidden border border-gray-200" style={{ height: '180px' }}>
+    <div className="mt-3 rounded overflow-hidden border border-gray-200" style={{ height: '250px' }}>
       <MapContainer
         center={[centerLat, centerLng]}
         zoom={13}
         style={{ height: '100%', width: '100%' }}
-        zoomControl={false}
-        dragging={false}
-        scrollWheelZoom={false}
-        doubleClickZoom={false}
       >
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
