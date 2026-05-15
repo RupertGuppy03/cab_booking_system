@@ -108,9 +108,10 @@ note that all new endpoints now developed need to reference our new Part2 direct
 
 2.1. **Map-Based Booking** — extends the booking page. Replaces the address text inputs with a Leaflet map where customers drop pins for pickup and destination. Uses Nominatim reverse geocoding to populate the Part 1 address fields. Submits to `map_booking.php` which writes to the existing `bookings` table plus the new `trips` table for coordinates.
 
-2.2. **Driver Portal** — extends the admin concept into a driver-facing page. Drivers log in with a driver ID, see unassigned bookings, and progress them through `assigned` → `in_progress` → `completed` via `driver.php`. Drivers can accept a job, which updates the booking's status from unassigned to assigned, and later mark it as in progress or completed as the ride progresses. 
+2.2. **Driver Portal** — extends the admin concept into a driver-facing page. Drivers log in with a driver ID, see unassigned bookings, and progress them through `assigned` → `in_progress` → `completed` via `driver.php`. Drivers can accept a job, which updates the booking's status from unassigned to assigned, and later mark 
+it as in progress or completed as the ride progresses. 
 
-2.3. **Live Booking Tracker** — customer-facing page. Customers enter a BRN to view current status as a visual progress indicator with a Leaflet map showing pickup and destination. Polls `tracker.php` every 5 seconds.
+2.3. **Customer Rating & Review** — extends the My Trips page and Driver Portal. When a booking is marked `completed`, a review form appears below the booking card on the My Trips page. The customer can submit a 1–5 star rating and an optional comment tied to their BRN and the assigned driver ID via `review.php`, which writes to a new `reviews` table. Once submitted, the form is replaced with a confirmation message and cannot be submitted again for the same BRN. On the Driver Portal, drivers can navigate to a My Reviews section where they see all feedback left by customers for their completed trips, including the star rating, comment, and date submitted.
 
 2.4. **Fare Estimator + Trip History** — combines a live Haversine fare estimate on the booking page with a `MyTripsPage` where customers enter their phone number or booking number to see all past bookings via `trips.php`. Here they can also see their pickup location for any upcoming tips they have and cancel future bookings they have made under the same phone number or booking number. 
 
