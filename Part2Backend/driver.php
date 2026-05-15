@@ -137,6 +137,13 @@ function handle_claim($conn, $driver_id, $brn) {
     mysqli_stmt_close($stmt);
 
     if ($affected > 0) {
+        $stmt2 = mysqli_prepare($conn,
+            "UPDATE trips SET driver_id = ? WHERE brn = ?"
+        );
+        mysqli_stmt_bind_param($stmt2, 'ss', $driver_id, $brn);
+        mysqli_stmt_execute($stmt2);
+        mysqli_stmt_close($stmt2);
+
         echo json_encode(['success' => true]);
     } else {
         echo json_encode(['error' => 'Booking ' . $brn . ' could not be claimed — it may have already been taken.']);

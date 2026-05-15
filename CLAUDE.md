@@ -112,7 +112,7 @@ note that all new endpoints now developed need to reference our new Part2 direct
 
 2.3. **Live Booking Tracker** — customer-facing page. Customers enter a BRN to view current status as a visual progress indicator with a Leaflet map showing pickup and destination. Polls `tracker.php` every 5 seconds.
 
-2.4. **Fare Estimator + Trip History** — combines a live Haversine fare estimate on the booking page with a `MyTripsPage` where customers enter their phone number to see all past bookings via `trips.php`.
+2.4. **Fare Estimator + Trip History** — combines a live Haversine fare estimate on the booking page with a `MyTripsPage` where customers enter their phone number or booking number to see all past bookings via `trips.php`. Here they can also see their pickup location for any upcoming tips they have and cancel future bookings they have made under the same phone number or booking number. 
 
 ---
 
