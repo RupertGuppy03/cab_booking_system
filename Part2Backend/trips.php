@@ -4,12 +4,13 @@
   File: trips.php
   Description: Part 2 backend handler for the trip history and cancellation features.
                Supports two actions: 'search' returns all bookings matching a phone number
-               or BRN (joined with the trips table for coordinates and fare), and 'cancel'
-               sets an unassigned booking's status to 'cancelled'.
+               or BRN (joined with the trips table for coordinates/fare and the reviews
+               table for rating data), and 'cancel' sets an unassigned booking's status
+               to 'cancelled'.
 
   Functions:
     - sanitise_input():   Trims whitespace and strips HTML/PHP tags from a string.
-    - handle_search():    LEFT JOINs bookings with trips and returns matching rows as JSON.
+    - handle_search():    LEFT JOINs bookings with trips and reviews, returns rows as JSON.
     - handle_cancel():    Cancels an unassigned booking by BRN, returns JSON result.
 */
 
@@ -35,9 +36,9 @@ function sanitise_input($value) {
 
 /*
   handle_search(conn, phone, brn)
-  Searches for bookings by phone number or BRN. LEFT JOINs the trips table so
-  coordinates and fare are included when available. Returns a JSON array of
-  booking objects ordered with upcoming trips first, then past trips.
+  Searches for bookings by phone number or BRN. LEFT JOINs the trips table for
+  coordinates and fare, and the reviews table for submitted rating data.
+  Returns a JSON array ordered with upcoming trips first, then past trips.
 */
 function handle_search($conn, $phone, $brn) {
     if ($phone === '' && $brn === '') {
@@ -49,10 +50,13 @@ function handle_search($conn, $phone, $brn) {
         SELECT
             b.brn, b.cname, b.phone, b.sbname, b.dsbname,
             b.pickup_date, b.pickup_time, b.status, b.booking_datetime,
+            b.driver_id,
             t.pickup_lat, t.pickup_lng, t.dest_lat, t.dest_lng,
-            t.fare_estimate, t.driver_id
+            t.fare_estimate,
+            r.rating AS review_rating, r.comment AS review_comment
         FROM bookings b
         LEFT JOIN trips t ON b.brn = t.brn
+        LEFT JOIN reviews r ON b.brn = r.brn
         WHERE ";
 
     if ($brn !== '') {

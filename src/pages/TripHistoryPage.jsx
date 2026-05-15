@@ -3,9 +3,9 @@
  * File: TripHistoryPage.jsx
  * Description: Trip history page. Customers search by phone number or BRN to view
  *              all their bookings. Upcoming trips show a Leaflet map with pickup and
- *              destination pins plus driver assignment status. Past trips show fare,
- *              addresses, and driver info. Unassigned bookings can be cancelled.
- * Functions: TripHistoryPage, TripCard, TripMap
+ *              destination pins plus driver assignment status. Completed bookings show
+ *              a star rating form or the submitted review. Unassigned bookings can be cancelled.
+ * Functions: TripHistoryPage, TripCard, TripMap, StarRating, ReviewForm, ReviewDisplay
  */
 
 import { useState } from 'react';
@@ -13,7 +13,8 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
-const TRIPS_URL = 'https://webdev.aut.ac.nz/~pxw1781/assign/Part2/trips.php';
+const TRIPS_URL  = 'https://webdev.aut.ac.nz/~pxw1781/assign/Part2/trips.php';
+const REVIEW_URL = 'https://webdev.aut.ac.nz/~pxw1781/assign/Part2/review.php';
 
 const UPCOMING_STATUSES = ['unassigned', 'assigned', 'in_progress'];
 
@@ -48,8 +49,117 @@ const destIcon = new L.DivIcon({
 });
 
 /*
+  StarRating({ value, onChange, readOnly })
+  Renders 5 clickable star icons. In interactive mode stars highlight on hover
+  and fire onChange(n) on click. In readOnly mode stars are non-interactive.
+*/
+function StarRating({ value, onChange, readOnly = false }) {
+  const [hover, setHover] = useState(0);
+  const active = hover || value;
+
+  return (
+    <div className="flex gap-0.5">
+      {[1, 2, 3, 4, 5].map(star => (
+        <button
+          key={star}
+          type="button"
+          disabled={readOnly}
+          onClick={() => !readOnly && onChange && onChange(star)}
+          onMouseEnter={() => !readOnly && setHover(star)}
+          onMouseLeave={() => !readOnly && setHover(0)}
+          className={`text-2xl leading-none p-0 border-none bg-transparent ${readOnly ? 'cursor-default' : 'cursor-pointer'}`}
+          style={{ color: star <= active ? '#f59e0b' : '#d1d5db' }}
+        >
+          ★
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/*
+  ReviewForm({ trip, onSubmitted })
+  Form for submitting a 1-5 star rating and optional comment for a completed booking.
+  Calls onSubmitted(brn, rating, comment) on success so the parent can update state.
+*/
+function ReviewForm({ trip, onSubmitted }) {
+  const [rating,     setRating]     = useState(0);
+  const [comment,    setComment]    = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [error,      setError]      = useState('');
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    if (rating === 0) {
+      setError('Please select a star rating before submitting.');
+      return;
+    }
+    setError('');
+    setSubmitting(true);
+    try {
+      const fd = new FormData();
+      fd.append('action',  'submit');
+      fd.append('brn',     trip.brn);
+      fd.append('rating',  rating);
+      fd.append('comment', comment);
+      if (trip.driver_id) fd.append('driver_id', trip.driver_id);
+      const res  = await fetch(REVIEW_URL, { method: 'POST', body: fd });
+      const data = await res.json();
+      if (data.error) {
+        setError(data.error);
+      } else {
+        onSubmitted(trip.brn, rating, comment);
+      }
+    } catch {
+      setError('Network error — could not submit review. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="mt-3 pt-3 border-t border-gray-100">
+      <p className="text-sm font-medium text-gray-700 mb-2">Leave a Review</p>
+      <form onSubmit={handleSubmit} className="space-y-2">
+        <StarRating value={rating} onChange={setRating} />
+        <textarea
+          value={comment}
+          onChange={e => setComment(e.target.value)}
+          placeholder="Optional comment…"
+          rows={2}
+          className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand resize-none"
+        />
+        {error && <p className="text-xs text-red-600">{error}</p>}
+        <button
+          type="submit"
+          disabled={submitting}
+          className="px-4 py-1.5 bg-brand text-white rounded text-sm font-medium hover:bg-brand-dark disabled:opacity-50 transition-colors"
+        >
+          {submitting ? 'Submitting…' : 'Submit Review'}
+        </button>
+      </form>
+    </div>
+  );
+}
+
+/*
+  ReviewDisplay({ rating, comment })
+  Read-only view of a submitted review. Shown when review_rating already exists
+  on the trip data (loaded from DB or submitted this session).
+*/
+function ReviewDisplay({ rating, comment }) {
+  return (
+    <div className="mt-3 pt-3 border-t border-gray-100">
+      <p className="text-sm font-medium text-gray-700 mb-1">Your Review</p>
+      <StarRating value={parseInt(rating)} readOnly />
+      {comment && <p className="text-sm text-gray-600 mt-1 italic">"{comment}"</p>}
+    </div>
+  );
+}
+
+/*
   TripMap({ trip })
-  Renders a small Leaflet map centred between pickup and destination pins.
+  Renders a Leaflet map centred between pickup and destination pins.
   Only shown for bookings that have coordinate data in the trips table.
 */
 function TripMap({ trip }) {
@@ -91,11 +201,11 @@ function TripMap({ trip }) {
 }
 
 /*
-  TripCard({ trip, onCancel, cancellingBrn, cancelError })
+  TripCard({ trip, onCancel, cancellingBrn, cancelError, onReviewSubmitted })
   Renders one booking card. Upcoming bookings include a map and optional cancel
-  button. Past bookings show a text-only summary.
+  button. Completed bookings show a review form or the submitted review.
 */
-function TripCard({ trip, onCancel, cancellingBrn, cancelError }) {
+function TripCard({ trip, onCancel, cancellingBrn, cancelError, onReviewSubmitted }) {
   const isUpcoming = UPCOMING_STATUSES.includes(trip.status);
   const fare = trip.fare_estimate && parseFloat(trip.fare_estimate) > 0
     ? `$${parseFloat(trip.fare_estimate).toFixed(2)}`
@@ -149,6 +259,12 @@ function TripCard({ trip, onCancel, cancellingBrn, cancelError }) {
           )}
         </div>
       )}
+
+      {trip.status === 'completed' && (
+        trip.review_rating
+          ? <ReviewDisplay rating={trip.review_rating} comment={trip.review_comment} />
+          : <ReviewForm trip={trip} onSubmitted={onReviewSubmitted} />
+      )}
     </div>
   );
 }
@@ -156,16 +272,16 @@ function TripCard({ trip, onCancel, cancellingBrn, cancelError }) {
 /*
   TripHistoryPage
   Main page component. Handles search input validation, fetching from trips.php,
-  and dispatching cancel requests. Renders the list of TripCards.
+  cancel requests, and optimistic review state updates after submission.
 */
 export default function TripHistoryPage() {
-  const [query, setQuery]               = useState('');
-  const [trips, setTrips]               = useState(null);
-  const [loading, setLoading]           = useState(false);
-  const [searchError, setSearchError]   = useState('');
-  const [inputError, setInputError]     = useState('');
+  const [query,         setQuery]         = useState('');
+  const [trips,         setTrips]         = useState(null);
+  const [loading,       setLoading]       = useState(false);
+  const [searchError,   setSearchError]   = useState('');
+  const [inputError,    setInputError]    = useState('');
   const [cancellingBrn, setCancellingBrn] = useState(null);
-  const [cancelError, setCancelError]   = useState(null);
+  const [cancelError,   setCancelError]   = useState(null);
 
   function validateQuery(value) {
     const trimmed = value.trim();
@@ -234,6 +350,12 @@ export default function TripHistoryPage() {
     }
   }
 
+  function handleReviewSubmitted(brn, rating, comment) {
+    setTrips(prev => prev.map(t =>
+      t.brn === brn ? { ...t, review_rating: rating, review_comment: comment } : t
+    ));
+  }
+
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div className="bg-white rounded-lg shadow p-6">
@@ -285,6 +407,7 @@ export default function TripHistoryPage() {
               onCancel={handleCancel}
               cancellingBrn={cancellingBrn}
               cancelError={cancelError}
+              onReviewSubmitted={handleReviewSubmitted}
             />
           ))}
         </div>
