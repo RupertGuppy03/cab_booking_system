@@ -9,6 +9,7 @@
  */
 
 import { useState } from 'react';
+import { usePersistentState } from '../hooks/usePersistentState';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -275,8 +276,8 @@ function TripCard({ trip, onCancel, cancellingBrn, cancelError, onReviewSubmitte
   cancel requests, and optimistic review state updates after submission.
 */
 export default function TripHistoryPage() {
-  const [query,         setQuery]         = useState('');
-  const [trips,         setTrips]         = useState(null);
+  const [query,         setQuery]         = usePersistentState('trips-query',   '');
+  const [trips,         setTrips]         = usePersistentState('trips-results', null);
   const [loading,       setLoading]       = useState(false);
   const [searchError,   setSearchError]   = useState('');
   const [inputError,    setInputError]    = useState('');

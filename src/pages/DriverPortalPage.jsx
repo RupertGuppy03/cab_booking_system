@@ -9,6 +9,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { usePersistentState } from '../hooks/usePersistentState';
 
 const DRIVER_URL = 'https://webdev.aut.ac.nz/~pxw1781/assign/Part2/driver.php';
 const REVIEW_URL = 'https://webdev.aut.ac.nz/~pxw1781/assign/Part2/review.php';
@@ -47,7 +48,7 @@ function StarDisplay({ rating }) {
 }
 
 export default function DriverPortalPage() {
-  const [driver,         setDriver]        = useState(null);
+  const [driver,         setDriver]        = usePersistentState('driver-session', null);
   const [driverIdInput,  setDriverIdInput] = useState('');
   const [loginError,     setLoginError]    = useState('');
   const [loginLoading,   setLoginLoading]  = useState(false);
