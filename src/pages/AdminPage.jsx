@@ -79,7 +79,7 @@ export default function AdminPage() {
 
   const columns = [
     'Booking Reference', 'Customer Name', 'Phone',
-    'Pickup Suburb', 'Destination Suburb', 'Pickup Date & Time', 'Status', 'Assign',
+    'Pickup Suburb', 'Destination Suburb', 'Pickup Date & Time', 'Status', 'Driver', 'Assign',
   ];
 
   return (
@@ -140,7 +140,7 @@ export default function AdminPage() {
                 </thead>
                 <tbody>
                   {records.map(record => {
-                    const isAssigned = record.status === 'assigned' || assignedBrns.has(record.brn);
+                    const isAssigned = record.status !== 'unassigned' || assignedBrns.has(record.brn);
                     return (
                       <tr key={record.brn} id={`row-${record.brn}`} className="border-b border-gray-100 last:border-0">
                         <td className="px-3 py-2">{record.brn}</td>
@@ -150,8 +150,9 @@ export default function AdminPage() {
                         <td className="px-3 py-2">{record.dsbname}</td>
                         <td className="px-3 py-2">{record.pickup_date} {record.pickup_time}</td>
                         <td className="px-3 py-2" id={`status-${record.brn}`}>
-                          {isAssigned ? 'assigned' : record.status}
+                          {isAssigned && record.status === 'unassigned' ? 'assigned' : record.status}
                         </td>
+                        <td className="px-3 py-2">{record.driver_id || '—'}</td>
                         <td className="px-3 py-2">
                           <button
                             name="Assign"

@@ -45,18 +45,22 @@ function sanitise_input($value) {
 function handle_search($conn, $bsearch) {
     if ($bsearch !== '') {
         $stmt = mysqli_prepare($conn,
-            "SELECT brn, cname, phone, sbname, dsbname, pickup_date, pickup_time, status
-             FROM bookings
-             WHERE brn = ?"
+            "SELECT b.brn, b.cname, b.phone, b.sbname, b.dsbname,
+                    b.pickup_date, b.pickup_time, b.status, t.driver_id
+             FROM bookings b
+             LEFT JOIN trips t ON t.brn = b.brn
+             WHERE b.brn = ?"
         );
         mysqli_stmt_bind_param($stmt, 's', $bsearch);
 
     } else {
         $stmt = mysqli_prepare($conn,
-            "SELECT brn, cname, phone, sbname, dsbname, pickup_date, pickup_time, status
-             FROM bookings
-             WHERE status = 'unassigned'
-             AND STR_TO_DATE(CONCAT(pickup_date, ' ', pickup_time), '%d/%m/%Y %H:%i')
+            "SELECT b.brn, b.cname, b.phone, b.sbname, b.dsbname,
+                    b.pickup_date, b.pickup_time, b.status, t.driver_id
+             FROM bookings b
+             LEFT JOIN trips t ON t.brn = b.brn
+             WHERE b.status = 'unassigned'
+             AND STR_TO_DATE(CONCAT(b.pickup_date, ' ', b.pickup_time), '%d/%m/%Y %H:%i')
              BETWEEN NOW() AND DATE_ADD(NOW(), INTERVAL 2 HOUR)"
         );
     }
