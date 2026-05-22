@@ -5,10 +5,10 @@
  *              all their bookings. Upcoming trips show a Leaflet map with pickup and
  *              destination pins plus driver assignment status. Completed bookings show
  *              a star rating form or the submitted review. Unassigned bookings can be cancelled.
- * Functions: TripHistoryPage, TripCard, TripMap, StarRating, ReviewForm, ReviewDisplay
+ * Functions: TripHistoryPage, performSearch, TripCard, TripMap, StarRating, ReviewForm, ReviewDisplay
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { usePersistentState } from '../hooks/usePersistentState';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
@@ -277,7 +277,7 @@ function TripCard({ trip, onCancel, cancellingBrn, cancelError, onReviewSubmitte
 */
 export default function TripHistoryPage() {
   const [query,         setQuery]         = usePersistentState('trips-query',   '');
-  const [trips,         setTrips]         = usePersistentState('trips-results', null);
+  const [trips,         setTrips]         = useState(null);
   const [loading,       setLoading]       = useState(false);
   const [searchError,   setSearchError]   = useState('');
   const [inputError,    setInputError]    = useState('');
@@ -291,40 +291,45 @@ export default function TripHistoryPage() {
     return null;
   }
 
-  async function handleSearch(e) {
-    e.preventDefault();
-    setInputError('');
+  /** Fetches trips for the given query value and updates state. Used by both the search form and the auto-fetch on mount. */
+  async function performSearch(queryValue) {
+    const parsed = validateQuery(queryValue);
+    if (!parsed) return;
     setSearchError('');
     setTrips(null);
     setCancelError(null);
-
-    const parsed = validateQuery(query);
-    if (!parsed) {
-      setInputError('Enter a 10–12 digit phone number or a booking reference like BRN00001.');
-      return;
-    }
-
     setLoading(true);
     try {
       const body = new FormData();
       body.append('action', 'search');
       if (parsed.type === 'phone') body.append('phone', parsed.value);
       else                         body.append('brn',   parsed.value);
-
       const res  = await fetch(TRIPS_URL, { method: 'POST', body });
       const data = await res.json();
-
-      if (data.error) {
-        setSearchError(data.error);
-      } else {
-        setTrips(data);
-      }
+      if (data.error) setSearchError(data.error);
+      else            setTrips(data);
     } catch {
       setSearchError('Network error — please check your connection and try again.');
     } finally {
       setLoading(false);
     }
   }
+
+  /** Validates the form input then delegates to performSearch. */
+  async function handleSearch(e) {
+    e.preventDefault();
+    setInputError('');
+    if (!validateQuery(query.trim())) {
+      setInputError('Enter a 10–12 digit phone number or a booking reference like BRN00001.');
+      return;
+    }
+    await performSearch(query.trim());
+  }
+
+  /** Auto-fetch on mount so returning to the page always shows fresh results. */
+  useEffect(() => {
+    if (query.trim()) performSearch(query.trim());
+  }, []);
 
   async function handleCancel(brn) {
     setCancelError(null);
