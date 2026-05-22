@@ -3,13 +3,16 @@
  * File: DriverPortalPage.jsx
  * Description: Driver portal page. Drivers log in with a driver ID and can view
  *              unassigned bookings, claim them, and progress each job through
- *              assigned → in_progress → completed via driver.php.
- * Functions: DriverPortalPage, post
+ *              assigned → in_progress → completed via driver.php. A My Reviews tab
+ *              shows all customer ratings and comments for the driver's completed trips.
+ * Functions: DriverPortalPage, StarDisplay, post
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { usePersistentState } from '../hooks/usePersistentState';
 
 const DRIVER_URL = 'https://webdev.aut.ac.nz/~pxw1781/assign/Part2/driver.php';
+const REVIEW_URL = 'https://webdev.aut.ac.nz/~pxw1781/assign/Part2/review.php';
 
 /** Posts form data to driver.php and returns the parsed JSON response. */
 async function post(params) {
@@ -20,10 +23,10 @@ async function post(params) {
 }
 
 const STATUS_LABELS = {
-  unassigned: 'Unassigned',
-  assigned:   'Assigned',
+  unassigned:  'Unassigned',
+  assigned:    'Assigned',
   in_progress: 'In Progress',
-  completed:  'Completed',
+  completed:   'Completed',
 };
 
 const STATUS_COLOURS = {
@@ -33,18 +36,34 @@ const STATUS_COLOURS = {
   completed:   'bg-green-100 text-green-700',
 };
 
-export default function DriverPortalPage() {
-  const [driver,        setDriver]       = useState(null);
-  const [driverIdInput, setDriverIdInput] = useState('');
-  const [loginError,    setLoginError]   = useState('');
-  const [loginLoading,  setLoginLoading] = useState(false);
+/** Renders a read-only star rating display for the reviews tab. */
+function StarDisplay({ rating }) {
+  const n = parseInt(rating) || 0;
+  return (
+    <span style={{ fontSize: '1.2rem', letterSpacing: '1px' }}>
+      <span style={{ color: '#f59e0b' }}>{'★'.repeat(n)}</span>
+      <span style={{ color: '#d1d5db' }}>{'★'.repeat(5 - n)}</span>
+    </span>
+  );
+}
 
-  const [myBookings,   setMyBookings]  = useState([]);
-  const [unassigned,   setUnassigned]  = useState([]);
-  const [fetchError,   setFetchError]  = useState('');
-  const [fetchLoading, setFetchLoading] = useState(false);
+export default function DriverPortalPage() {
+  const [driver,         setDriver]        = usePersistentState('driver-session', null);
+  const [driverIdInput,  setDriverIdInput] = useState('');
+  const [loginError,     setLoginError]    = useState('');
+  const [loginLoading,   setLoginLoading]  = useState(false);
+
+  const [myBookings,    setMyBookings]   = useState([]);
+  const [unassigned,    setUnassigned]   = useState([]);
+  const [fetchError,    setFetchError]   = useState('');
+  const [fetchLoading,  setFetchLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(new Set());
   const [actionErrors,  setActionErrors]  = useState({});
+
+  const [activeTab,      setActiveTab]      = useState('jobs');
+  const [reviews,        setReviews]        = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [reviewsError,   setReviewsError]   = useState('');
 
   /**
    * Fetches the driver's active jobs and the unassigned booking pool in parallel.
@@ -108,6 +127,36 @@ export default function DriverPortalPage() {
     }
   }
 
+  /** Fetches all customer reviews for this driver from review.php. */
+  async function loadReviews() {
+    setReviewsLoading(true);
+    setReviewsError('');
+    try {
+      const fd = new FormData();
+      fd.append('action',    'get_for_driver');
+      fd.append('driver_id', driver.driver_id);
+      const res  = await fetch(REVIEW_URL, { method: 'POST', body: fd });
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        setReviews(data);
+      } else {
+        setReviewsError(data.error || 'Failed to load reviews.');
+      }
+    } catch {
+      setReviewsError('Network error — could not load reviews. Please try again.');
+    } finally {
+      setReviewsLoading(false);
+    }
+  }
+
+  /** Switches the active tab and lazy-loads reviews on first visit to that tab. */
+  function handleTabChange(tab) {
+    setActiveTab(tab);
+    if (tab === 'reviews' && reviews.length === 0 && !reviewsLoading) {
+      loadReviews();
+    }
+  }
+
   /** Claims an unassigned booking for this driver and refreshes both lists. */
   async function handleClaim(brn) {
     setActionLoading(prev => new Set([...prev, brn]));
@@ -152,6 +201,9 @@ export default function DriverPortalPage() {
     setUnassigned([]);
     setFetchError('');
     setActionErrors({});
+    setActiveTab('jobs');
+    setReviews([]);
+    setReviewsError('');
   }
 
   /* ── LOGIN VIEW ──────────────────────────────────────────────────────── */
@@ -245,87 +297,154 @@ export default function DriverPortalPage() {
         </div>
       </div>
 
-      {fetchError && (
-        <div className="p-3 bg-red-50 border border-red-300 rounded-lg text-sm text-red-700">
-          {fetchError}
-        </div>
+      {/* Tab bar */}
+      <div className="flex gap-2">
+        {[['jobs', 'My Jobs'], ['reviews', 'My Reviews']].map(([tab, label]) => (
+          <button
+            key={tab}
+            onClick={() => handleTabChange(tab)}
+            className={`px-5 py-2 rounded text-sm font-medium transition-colors cursor-pointer ${
+              activeTab === tab
+                ? 'bg-brand text-white'
+                : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-50'
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* ── JOBS TAB ─────────────────────────────────────────────────────── */}
+      {activeTab === 'jobs' && (
+        <>
+          {fetchError && (
+            <div className="p-3 bg-red-50 border border-red-300 rounded-lg text-sm text-red-700">
+              {fetchError}
+            </div>
+          )}
+
+          {/* My Active Jobs */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">My Active Jobs</h3>
+            {myBookings.length === 0 ? (
+              <p className="text-gray-500 text-sm">No active jobs right now.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm border-collapse">
+                  <thead className="bg-brand text-white">
+                    <tr>
+                      {[...columns, 'Action'].map(col => (
+                        <th key={col} className="px-3 py-3 text-left font-normal">{col}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {myBookings.map(b => renderRow(b, (booking, isActing) => (
+                      <>
+                        {booking.status === 'assigned' && (
+                          <button
+                            onClick={() => handleUpdateStatus(booking.brn, 'in_progress')}
+                            disabled={isActing}
+                            className="px-3 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 disabled:opacity-50 cursor-pointer"
+                          >
+                            {isActing ? '…' : 'Start Trip'}
+                          </button>
+                        )}
+                        {booking.status === 'in_progress' && (
+                          <button
+                            onClick={() => handleUpdateStatus(booking.brn, 'completed')}
+                            disabled={isActing}
+                            className="px-3 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700 disabled:opacity-50 cursor-pointer"
+                          >
+                            {isActing ? '…' : 'Complete Trip'}
+                          </button>
+                        )}
+                      </>
+                    )))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
+          {/* Available Bookings */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Available Bookings</h3>
+            {unassigned.length === 0 ? (
+              <p className="text-gray-500 text-sm">No unassigned bookings available.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm border-collapse">
+                  <thead className="bg-brand text-white">
+                    <tr>
+                      {[...columns, 'Claim'].map(col => (
+                        <th key={col} className="px-3 py-3 text-left font-normal">{col}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {unassigned.map(b => renderRow(b, (booking, isActing) => (
+                      <button
+                        onClick={() => handleClaim(booking.brn)}
+                        disabled={isActing}
+                        className="px-3 py-1 bg-brand text-white rounded text-xs hover:bg-brand-dark disabled:opacity-50 cursor-pointer"
+                      >
+                        {isActing ? '…' : 'Claim'}
+                      </button>
+                    )))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </>
       )}
 
-      {/* My Active Jobs */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">My Active Jobs</h3>
-        {myBookings.length === 0 ? (
-          <p className="text-gray-500 text-sm">No active jobs right now.</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm border-collapse">
-              <thead className="bg-brand text-white">
-                <tr>
-                  {[...columns, 'Action'].map(col => (
-                    <th key={col} className="px-3 py-3 text-left font-normal">{col}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {myBookings.map(b => renderRow(b, (booking, isActing) => (
-                  <>
-                    {booking.status === 'assigned' && (
-                      <button
-                        onClick={() => handleUpdateStatus(booking.brn, 'in_progress')}
-                        disabled={isActing}
-                        className="px-3 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 disabled:opacity-50 cursor-pointer"
-                      >
-                        {isActing ? '…' : 'Start Trip'}
-                      </button>
-                    )}
-                    {booking.status === 'in_progress' && (
-                      <button
-                        onClick={() => handleUpdateStatus(booking.brn, 'completed')}
-                        disabled={isActing}
-                        className="px-3 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700 disabled:opacity-50 cursor-pointer"
-                      >
-                        {isActing ? '…' : 'Complete Trip'}
-                      </button>
-                    )}
-                  </>
-                )))}
-
-              </tbody>
-            </table>
+      {/* ── REVIEWS TAB ──────────────────────────────────────────────────── */}
+      {activeTab === 'reviews' && (
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-800">My Reviews</h3>
+            <button
+              onClick={loadReviews}
+              disabled={reviewsLoading}
+              className="px-3 py-1.5 border border-brand text-brand rounded text-sm hover:bg-brand hover:text-white disabled:opacity-50 transition-colors cursor-pointer"
+            >
+              {reviewsLoading ? 'Loading…' : 'Refresh'}
+            </button>
           </div>
-        )}
-      </div>
 
-      {/* Available Bookings */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">Available Bookings</h3>
-        {unassigned.length === 0 ? (
-          <p className="text-gray-500 text-sm">No unassigned bookings available.</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm border-collapse">
-              <thead className="bg-brand text-white">
-                <tr>
-                  {[...columns, 'Claim'].map(col => (
-                    <th key={col} className="px-3 py-3 text-left font-normal">{col}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {unassigned.map(b => renderRow(b, (booking, isActing) => (
-                  <button
-                    onClick={() => handleClaim(booking.brn)}
-                    disabled={isActing}
-                    className="px-3 py-1 bg-brand text-white rounded text-xs hover:bg-brand-dark disabled:opacity-50 cursor-pointer"
-                  >
-                    {isActing ? '…' : 'Claim'}
-                  </button>
-                )))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+          {reviewsError && (
+            <p className="text-red-600 text-sm mb-3">{reviewsError}</p>
+          )}
+
+          {reviewsLoading && reviews.length === 0 ? (
+            <p className="text-gray-500 text-sm">Loading reviews…</p>
+          ) : reviews.length === 0 ? (
+            <p className="text-gray-500 text-sm">No reviews yet — completed trips will appear here once customers leave feedback.</p>
+          ) : (
+            <div className="space-y-4">
+              {reviews.map(r => (
+                <div key={r.brn} className="border border-gray-200 rounded-lg p-4">
+                  <div className="flex items-start justify-between gap-2 flex-wrap">
+                    <div>
+                      <span className="text-xs font-mono text-gray-500">{r.brn}</span>
+                      {r.cname && <p className="text-sm font-medium text-gray-800 mt-0.5">{r.cname}</p>}
+                    </div>
+                    <span className="text-xs text-gray-400">{r.created_at}</span>
+                  </div>
+                  <div className="mt-2">
+                    <StarDisplay rating={r.rating} />
+                  </div>
+                  {r.comment && (
+                    <p className="mt-2 text-sm text-gray-600 italic">"{r.comment}"</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

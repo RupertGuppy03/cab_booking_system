@@ -16,6 +16,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { usePersistentState } from '../hooks/usePersistentState';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -23,6 +24,7 @@ import 'leaflet/dist/leaflet.css';
 const BOOKING_URL     = 'https://webdev.aut.ac.nz/~pxw1781/assign/Part2/booking.php';
 const MAP_BOOKING_URL = 'https://webdev.aut.ac.nz/~pxw1781/assign/Part2/map_booking.php';
 const AUCKLAND_CENTER = [-36.8485, 174.7633];
+const INITIAL_FIELDS  = { cname: '', phone: '', unumber: '', date: '', time: '', snumber: '', stname: '', sbname: '', dsbname: '' };
 const FARE_RATE = 2.50;
 const MIN_FARE  = 5.00;
 
@@ -90,18 +92,15 @@ function MapClickHandler({ onMapClick }) {
 }
 
 export default function BookingPage() {
-  const [fields, setFields] = useState({
-    cname: '', phone: '', unumber: '', date: '', time: '',
-    snumber: '', stname: '', sbname: '', dsbname: '',
-  });
-  const [errors, setErrors] = useState({});
-  const [confirmation, setConfirmation] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [fields,    setFields]    = usePersistentState('booking-fields',      INITIAL_FIELDS);
+  const [showMap,   setShowMap]   = usePersistentState('booking-show-map',    false);
+  const [pickupPin, setPickupPin] = usePersistentState('booking-pickup-pin',  null);
+  const [destPin,   setDestPin]   = usePersistentState('booking-dest-pin',    null);
+  const [pinMode,   setPinMode]   = usePersistentState('booking-pin-mode',    'pickup');
 
-  const [showMap, setShowMap] = useState(false);
-  const [pickupPin, setPickupPin] = useState(null);
-  const [destPin, setDestPin] = useState(null);
-  const [pinMode, setPinMode] = useState('pickup');
+  const [errors,       setErrors]       = useState({});
+  const [confirmation, setConfirmation] = useState('');
+  const [loading,      setLoading]      = useState(false);
   const [geocoding, setGeocoding] = useState(false);
   const [geocodeError, setGeocodeError] = useState('');
   const [fareEstimate, setFareEstimate] = useState(null);
@@ -115,7 +114,11 @@ export default function BookingPage() {
     const mm = String(now.getMonth() + 1).padStart(2, '0');
     const hh = String(now.getHours()).padStart(2, '0');
     const mi = String(now.getMinutes()).padStart(2, '0');
-    setFields(prev => ({ ...prev, date: `${dd}/${mm}/${now.getFullYear()}`, time: `${hh}:${mi}` }));
+    setFields(prev => ({
+      ...prev,
+      date: prev.date || `${dd}/${mm}/${now.getFullYear()}`,
+      time: prev.time || `${hh}:${mi}`,
+    }));
   }, []);
 
   /** Updates a single field in the form state on user input. */
@@ -290,6 +293,19 @@ export default function BookingPage() {
         }
       }
       setConfirmation(confirmText);
+      const now = new Date();
+      const dd = String(now.getDate()).padStart(2, '0');
+      const mm = String(now.getMonth() + 1).padStart(2, '0');
+      const hh = String(now.getHours()).padStart(2, '0');
+      const mi = String(now.getMinutes()).padStart(2, '0');
+      setFields({ ...INITIAL_FIELDS, date: `${dd}/${mm}/${now.getFullYear()}`, time: `${hh}:${mi}` });
+      setPickupPin(null);
+      setDestPin(null);
+      setPinMode('pickup');
+      setShowMap(false);
+      setFareEstimate(null);
+      setPickupUnreachable(false);
+      setDestUnreachable(false);
     } catch {
       setConfirmation('An error occurred while submitting your booking. Please try again.');
     } finally {

@@ -3,7 +3,7 @@
  * File: Layout.jsx
  * Description: Shared page layout wrapping all routes. Renders the top header
  *              bar with the CabsOnline brand and a navigation bar linking to
- *              each of the four feature pages.
+ *              the four main pages.
  * Functions: Layout
  */
 
@@ -11,10 +11,9 @@ import { NavLink } from 'react-router-dom';
 
 const navLinks = [
   { to: '/', label: 'Book a Cab' },
-  { to: '/admin', label: 'Admin' },
-  { to: '/driver', label: 'Driver Portal' },
-  { to: '/tracker', label: 'Track Booking' },
   { to: '/trips', label: 'My Trips' },
+  { to: '/driver', label: 'Driver Portal' },
+  { to: '/admin', label: 'Admin' },
 ];
 
 export default function Layout({ children }) {
