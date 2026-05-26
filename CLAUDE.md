@@ -3,7 +3,6 @@
 ## Who I Am
 Student: Rupert Guppy (ID: 23196925)
 Assignment: Web Development Assignment, Part 2
-
 ---
 
 ## Project Overview
@@ -51,7 +50,7 @@ dtdocs/assign
 | Part 2 PHP backend | `/htdocs/assign/Part2/` |
 | Part 1 PHP (unchanged) | `/htdocs/assign/` |
 
-**Live URL:** `http://webdev.aut.ac.nz/~pxw1781/assign/Part2/filename`
+**Live URL:** `http://webdev.aut.ac.nz/~pxw1781/assign/Part2/`
 
 All React asset paths and the BrowserRouter basename are set to `/~pxw1781/assign/part2/` via `vite.config.js` and `App.jsx`. Do not change these.
 
